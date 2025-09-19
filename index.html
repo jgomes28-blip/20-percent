@@ -4,40 +4,59 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Microwave-Friendly Recipes</title>
+    <!-- 
+      MICROWAVE RECIPE FINDER
+      ======================
+      A single-page web application that helps users find microwave-friendly recipes
+      based on the ingredients they have available. Features include:
+      
+      - Ingredient-based recipe filtering with chip-based input
+      - Strict mode (only show recipes you can fully make) vs. loose mode (show close matches)
+      - Real-time filtering and URL state management
+      - Responsive design with dark theme
+      - Shareable links with current ingredient selection
+    -->
     <style>
+      /* CSS CUSTOM PROPERTIES - Design system variables */
       :root {
-        --bg: #0f172a;
-        --panel: #111827;
-        --panel-2: #0b1220;
-        --text: #e5e7eb;
-        --muted: #9ca3af;
-        --brand: #22c55e;
-        --brand-2: #16a34a;
-        --chip: #1f2937;
-        --card: #0b1220;
-        --border: #1f2937;
-        --danger: #ef4444;
+        --bg: #0f172a;           /* Main background color */
+        --panel: #111827;        /* Card/panel background */
+        --panel-2: #0b1220;      /* Secondary panel background */
+        --text: #e5e7eb;         /* Primary text color */
+        --muted: #9ca3af;        /* Secondary/muted text */
+        --brand: #22c55e;        /* Primary brand color (green) */
+        --brand-2: #16a34a;      /* Darker brand color for gradients */
+        --chip: #1f2937;         /* Chip/tag background */
+        --card: #0b1220;         /* Card background */
+        --border: #1f2937;       /* Border color */
+        --danger: #ef4444;       /* Error/danger color */
       }
 
+      /* RESET AND BASE STYLES */
       * { box-sizing: border-box; }
       html, body { height: 100%; }
       body {
         margin: 0;
+        /* Dark gradient background for modern look */
         background: linear-gradient(180deg, var(--panel-2), var(--bg));
         color: var(--text);
+        /* System font stack for optimal performance and consistency */
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
 
+      /* LAYOUT CONTAINER */
       .container {
         max-width: 1100px;
         margin: 0 auto;
         padding: 24px 16px 48px;
       }
 
+      /* HERO SECTION - Main call-to-action area */
       header { margin: 26px 0 10px; }
       .hero {
+        /* Radial gradient for visual depth and modern appearance */
         background: radial-gradient(900px 300px at 20% -20%, #1c2b49 0%, rgba(17,24,39,0) 60%), var(--panel);
         border: 1px solid var(--border);
         border-radius: 16px;
@@ -47,6 +66,7 @@
       .hero h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: 0.3px; }
       .hero p { margin: 0; color: var(--muted); }
 
+      /* CONTROLS SECTION - Ingredient input and filtering options */
       .controls {
         background: var(--panel);
         border: 1px solid var(--border);
@@ -61,6 +81,7 @@
       .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
       label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
 
+      /* CHIP INPUT - Interactive ingredient selection with visual chips */
       .chip-input {
         display: flex;
         flex-wrap: wrap;
@@ -80,16 +101,38 @@
         min-width: 160px;
       }
 
+      /* TOGGLE SWITCH - Custom styled checkbox for strict/loose mode */
       .switch {
         display: inline-flex;
         align-items: center;
         gap: 10px;
       }
-      .switch input { appearance: none; width: 40px; height: 22px; background: #374151; border-radius: 999px; position: relative; outline: none; cursor: pointer; border: 1px solid var(--border); }
+      .switch input { 
+        appearance: none; 
+        width: 40px; 
+        height: 22px; 
+        background: #374151; 
+        border-radius: 999px; 
+        position: relative; 
+        outline: none; 
+        cursor: pointer; 
+        border: 1px solid var(--border); 
+      }
       .switch input:checked { background: #22c55e; }
-      .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #0b1220; border-radius: 50%; transition: transform .2s ease; }
+      .switch input::after { 
+        content: ""; 
+        position: absolute; 
+        top: 2px; 
+        left: 2px; 
+        width: 18px; 
+        height: 18px; 
+        background: #0b1220; 
+        border-radius: 50%; 
+        transition: transform .2s ease; 
+      }
       .switch input:checked::after { transform: translateX(18px); }
 
+      /* BUTTON STYLES - Primary and secondary action buttons */
       .btn {
         display: inline-flex;
         align-items: center;
@@ -110,8 +153,10 @@
         color: var(--text);
       }
 
+      /* META INFO - Results counter and status */
       .meta { display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: var(--muted); font-size: 13px; }
 
+      /* RESPONSIVE GRID - Recipe cards layout */
       .grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -124,6 +169,7 @@
         .grid { grid-template-columns: repeat(3, 1fr); }
       }
 
+      /* RECIPE CARD - Individual recipe display */
       .card {
         background: radial-gradient(1200px 400px at -10% -20%, #1a2a47 0%, rgba(17,24,39,0) 55%), var(--panel);
         border: 1px solid var(--border);
@@ -133,12 +179,22 @@
 
       .card h3 { margin: 0 0 8px; font-size: 16px; }
       .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-      .chip { background: var(--chip); color: var(--text); border: 1px solid var(--border); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
-      .chip.good { background: #0f3a1f; border-color: #1f6a3b; }
-      .chip.missing { background: #3a0f0f; border-color: #6a1f1f; }
-      .chip .x { margin-left: 6px; color: var(--muted); cursor: pointer; }
+      
+      /* INGREDIENT CHIPS - Visual indicators for ingredient availability */
+      .chip { 
+        background: var(--chip); 
+        color: var(--text); 
+        border: 1px solid var(--border); 
+        padding: 2px 8px; 
+        border-radius: 999px; 
+        font-size: 12px; 
+      }
+      .chip.good { background: #0f3a1f; border-color: #1f6a3b; }      /* Green: ingredient available */
+      .chip.missing { background: #3a0f0f; border-color: #6a1f1f; }  /* Red: ingredient missing */
+      .chip .x { margin-left: 6px; color: var(--muted); cursor: pointer; }  /* Remove button */
       .difficulty { font-weight: 700; }
 
+      /* CONTENT SECTIONS - Recipe details styling */
       .section-title { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
       ul, ol { margin: 0; padding-left: 18px; }
       li { margin: 4px 0; }
@@ -183,7 +239,9 @@
     </div>
 
     <script>
-      // Data (converted to JavaScript)
+      // ============================================================================
+      // RECIPE DATA - Collection of microwave-friendly recipes with ingredients and steps
+      // ============================================================================
       const recipes = [
         { title: "Mug Mac & Cheese", ingredients: ["pasta", "cheese", "milk", "water", "salt"], steps: ["Add 1/2 cup pasta and 1/2 cup water into a large mug.", "Microwave for 3-4 minutes, stirring halfway through.", "Add 1/4 cup milk and 1/2 cup shredded cheese.", "Stir and microwave for another 30-60 seconds until creamy."], difficulty: "Easy" },
         { title: "Microwave Brownie in a Mug", ingredients: ["flour", "sugar", "cocoa", "oil", "water"], steps: ["Mix 4 tbsp flour, 4 tbsp sugar, 2 tbsp cocoa in a mug.", "Add 2 tbsp oil and 2 tbsp water, mix until smooth.", "Microwave for 1-2 minutes until set.", "Let cool for 1 minute before eating."], difficulty: "Easy" },
@@ -214,29 +272,41 @@
         { title: "Microwave Apple Crisp", ingredients: ["apple", "oats", "sugar", "butter"], steps: ["Slice apple, place in mug.", "Mix oats, sugar, and butter into crumble topping.", "Sprinkle over apples, microwave 2-3 minutes."], difficulty: "Medium" }
       ];
 
+      // ============================================================================
+      // APPLICATION STATE - Manages user selections and URL synchronization
+      // ============================================================================
       const params = new URLSearchParams(location.search);
       const state = {
-        have: (params.get('have') || '').split(',').map(s => s.trim()).filter(Boolean),
-        strict: params.get('strict') !== '0'
+        have: (params.get('have') || '').split(',').map(s => s.trim()).filter(Boolean),  // User's available ingredients
+        strict: params.get('strict') !== '0'  // Strict mode: only show recipes user can fully make
       };
 
+      // ============================================================================
+      // DOM ELEMENTS - Cached references to HTML elements for performance
+      // ============================================================================
       const els = {
-        grid: document.getElementById('grid'),
-        meta: document.getElementById('meta'),
-        count: document.getElementById('count'),
-        countLabel: document.getElementById('countLabel'),
-        clear: document.getElementById('clear'),
-        share: document.getElementById('share'),
-        chipInput: document.getElementById('chipInput'),
-        chipText: document.getElementById('chipText'),
-        strict: document.getElementById('strict')
+        grid: document.getElementById('grid'),           // Recipe cards container
+        meta: document.getElementById('meta'),           // Results counter container
+        count: document.getElementById('count'),         // Number of results
+        countLabel: document.getElementById('countLabel'), // "recipes" or "matches" text
+        clear: document.getElementById('clear'),         // Clear all button
+        share: document.getElementById('share'),         // Share link button
+        chipInput: document.getElementById('chipInput'), // Ingredient chips container
+        chipText: document.getElementById('chipText'),   // Text input for new ingredients
+        strict: document.getElementById('strict')        // Strict mode toggle
       };
 
+      // ============================================================================
+      // INITIALIZATION FUNCTIONS - Set up initial state from URL parameters
+      // ============================================================================
       function setInitialInputs() {
         els.strict.checked = !!state.strict;
         renderChips();
       }
 
+      // ============================================================================
+      // URL MANAGEMENT - Synchronize application state with browser URL for sharing
+      // ============================================================================
       function updateURL() {
         const params = new URLSearchParams();
         if (state.have.length) params.set('have', state.have.join(','));
@@ -245,15 +315,36 @@
         history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
       }
 
+      // ============================================================================
+      // UTILITY FUNCTIONS - Helper functions for data processing and comparison
+      // ============================================================================
+      
+      /**
+       * Normalize string for consistent comparison (lowercase, trimmed)
+       * @param {string} str - Input string to normalize
+       * @returns {string} Normalized string
+       */
       function normalize(str) {
         return (str || '').toLowerCase().trim();
       }
 
+      /**
+       * Check if all needles exist in haystack list (case-insensitive)
+       * @param {Array} haystackList - List to search in
+       * @param {Array} needles - Items to find
+       * @returns {boolean} True if all needles found
+       */
       function includesAll(haystackList, needles) {
         const set = new Set(haystackList.map(normalize));
         return needles.every(n => set.has(normalize(n)));
       }
 
+      /**
+       * Count how many items from bList exist in aList
+       * @param {Array} aList - First list
+       * @param {Array} bList - Second list
+       * @returns {number} Count of matching items
+       */
       function intersectionCount(aList, bList) {
         const a = new Set(aList.map(normalize));
         let c = 0;
@@ -261,28 +352,56 @@
         return c;
       }
 
+      // ============================================================================
+      // RECIPE FILTERING - Core logic for finding matching recipes based on ingredients
+      // ============================================================================
+      
+      /**
+       * Filter recipes based on user's available ingredients and strict mode setting
+       * @param {Array} all - All available recipes
+       * @returns {Array} Filtered and sorted recipes
+       */
       function filterRecipes(all) {
         const have = state.have.map(normalize);
-        if (have.length === 0) return [];
+        if (have.length === 0) return [];  // No ingredients = no results
+        
+        // Calculate match statistics for each recipe
         const list = all.map(r => {
           const needed = r.ingredients.map(normalize);
-          const hits = intersectionCount(have, needed);
-          const missing = needed.filter(x => !have.includes(x));
-          const canMake = hits === needed.length;
+          const hits = intersectionCount(have, needed);           // How many ingredients user has
+          const missing = needed.filter(x => !have.includes(x)); // What's still needed
+          const canMake = hits === needed.length;                // Can make complete recipe
           return { ...r, _hits: hits, _missing: missing, _canMake: canMake };
         });
+        
+        // Apply filtering based on strict mode
         const filtered = state.strict
-          ? list.filter(r => r._canMake)
-          : list.filter(r => r._hits > 0);
+          ? list.filter(r => r._canMake)      // Strict: only complete matches
+          : list.filter(r => r._hits > 0);    // Loose: any partial matches
+        
+        // Sort results for optimal user experience
         return filtered.sort((a, b) => {
           if (!state.strict) {
+            // Loose mode: prioritize by match count, then by fewest missing ingredients
             if (b._hits !== a._hits) return b._hits - a._hits;
             if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
           }
+          // Alphabetical by title as final sort
           return a.title.localeCompare(b.title);
         });
       }
 
+      // ============================================================================
+      // DOM UTILITIES - Helper functions for creating and manipulating DOM elements
+      // ============================================================================
+      
+      /**
+       * Create HTML element with attributes and children (lightweight alternative to JSX)
+       * @param {string} tag - HTML tag name
+       * @param {Object} attrs - Element attributes
+       * @param {...any} children - Child elements or text content
+       * @returns {HTMLElement} Created element
+       */
       function h(tag, attrs = {}, ...children) {
         const el = document.createElement(tag);
         for (const [k, v] of Object.entries(attrs)) {
@@ -298,38 +417,64 @@
         return el;
       }
 
+      // ============================================================================
+      // RENDERING FUNCTIONS - Display recipe cards and manage UI state
+      // ============================================================================
+      
+      /**
+       * Render recipe cards in the grid based on filtered results
+       * @param {Array} list - Filtered recipe list to display
+       */
       function renderCards(list) {
         els.grid.innerHTML = '';
+        
+        // Show placeholder if no ingredients selected
         if (state.have.length === 0) {
           els.meta.style.display = 'none';
           els.grid.appendChild(h('div', { class: 'empty' }, 'Add some ingredients to see what you can make.'));
           return;
         }
+        
+        // Show results counter
         els.meta.style.display = '';
         els.count.textContent = list.length;
-        els.countLabel.textContent = state.strict ? (list.length === 1 ? 'recipe you can make' : 'recipes you can make') : (list.length === 1 ? 'match' : 'matches');
+        els.countLabel.textContent = state.strict 
+          ? (list.length === 1 ? 'recipe you can make' : 'recipes you can make') 
+          : (list.length === 1 ? 'match' : 'matches');
 
+        // Show empty state if no matches
         if (list.length === 0) {
-          els.grid.appendChild(h('div', { class: 'empty' }, state.strict ? 'No recipes can be fully made with those ingredients.' : 'No close matches yet. Try adding more ingredients.'));
+          els.grid.appendChild(h('div', { class: 'empty' }, 
+            state.strict 
+              ? 'No recipes can be fully made with those ingredients.' 
+              : 'No close matches yet. Try adding more ingredients.'));
           return;
         }
 
+        // Render each recipe card
         for (const r of list) {
           const haveSet = new Set(state.have.map(normalize));
+          
+          // Create ingredient chips with availability indicators
           const ingChips = h(
             'div',
             { class: 'chip-row' },
-            ...r.ingredients.map(i => h('span', { class: `chip ${haveSet.has(normalize(i)) ? 'good' : 'missing'}` }, i))
+            ...r.ingredients.map(i => h('span', { 
+              class: `chip ${haveSet.has(normalize(i)) ? 'good' : 'missing'}` 
+            }, i))
           );
 
+          // Create ordered list of cooking steps
           const stepsList = h('ol', {}, ...r.steps.map(s => h('li', {}, s)));
 
+          // Build complete recipe card
           const card = h(
             'div',
             { class: 'card' },
             h('h3', {}, r.title),
             h('div', { class: 'chip-row' },
               h('span', { class: 'chip difficulty' }, r.difficulty),
+              // Show match stats in loose mode
               !state.strict && h('span', { class: 'chip' }, `${r._hits} have • ${r._missing.length} missing`)
             ),
             h('div', { class: 'section-title' }, 'Ingredients'),
@@ -342,20 +487,35 @@
         }
       }
 
+      /**
+       * Render ingredient chips in the input area with remove functionality
+       */
       function renderChips() {
         // Remove existing chips (keep the input)
         Array.from(els.chipInput.querySelectorAll('span[data-chip]')).forEach(el => el.remove());
+        
+        // Create chips for each ingredient
         for (const item of state.have) {
-          const chip = h('span', { class: 'chip', 'data-chip': item }, item, h('span', { class: 'x', title: 'Remove' }, '×'));
+          const chip = h('span', { class: 'chip', 'data-chip': item }, 
+            item, 
+            h('span', { class: 'x', title: 'Remove' }, '×')
+          );
+          
+          // Add click handler to remove ingredient
           chip.querySelector('.x').addEventListener('click', () => {
             state.have = state.have.filter(x => x !== item);
             renderChips();
             applyFilters();
           });
+          
           els.chipInput.insertBefore(chip, els.chipText);
         }
       }
 
+      /**
+       * Add ingredients from text input (supports comma or newline separation)
+       * @param {string} raw - Raw input text
+       */
       function addFromText(raw) {
         const items = raw.split(/[\n,]/g).map(s => normalize(s)).filter(Boolean);
         for (const it of items) {
@@ -366,31 +526,52 @@
         applyFilters();
       }
 
+      // ============================================================================
+      // MAIN APPLICATION LOGIC - Orchestrate filtering and rendering
+      // ============================================================================
+      
+      /**
+       * Apply current filters and update the display
+       */
       function applyFilters() {
         const list = filterRecipes(recipes);
         renderCards(list);
         updateURL();
       }
 
+      // ============================================================================
+      // EVENT HANDLERS - User interaction and input management
+      // ============================================================================
+      
+      /**
+       * Set up all event listeners for user interactions
+       */
       function setupEvents() {
+        // Strict mode toggle
         els.strict.addEventListener('change', () => {
           state.strict = els.strict.checked;
           applyFilters();
         });
 
+        // Ingredient input handling
         els.chipText.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             addFromText(els.chipText.value);
           } else if (e.key === 'Backspace' && els.chipText.value === '' && state.have.length) {
+            // Remove last ingredient on backspace when input is empty
             state.have.pop();
             renderChips();
             applyFilters();
           }
         });
+        
+        // Add ingredients on blur (when user clicks away)
         els.chipText.addEventListener('blur', () => {
           if (els.chipText.value.trim()) addFromText(els.chipText.value);
         });
+        
+        // Handle pasted ingredient lists
         els.chipText.addEventListener('paste', (e) => {
           const text = (e.clipboardData || window.clipboardData).getData('text');
           if (text && /[,\n]/.test(text)) {
@@ -399,6 +580,7 @@
           }
         });
 
+        // Clear all ingredients and reset to strict mode
         els.clear.addEventListener('click', () => {
           state.have = [];
           state.strict = true;
@@ -406,6 +588,7 @@
           applyFilters();
         });
 
+        // Share current state as URL
         els.share.addEventListener('click', async () => {
           const url = location.href;
           try {
@@ -419,9 +602,12 @@
         });
       }
 
-      setInitialInputs();
-      setupEvents();
-      applyFilters();
+      // ============================================================================
+      // APPLICATION INITIALIZATION - Start the app when page loads
+      // ============================================================================
+      setInitialInputs();  // Set up UI from URL parameters
+      setupEvents();       // Attach event listeners
+      applyFilters();      // Show initial results
     </script>
   </body>
   </html>
