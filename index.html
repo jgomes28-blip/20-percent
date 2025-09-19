@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Microwave-Friendly Recipes</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-2: #0b1220;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --brand: #22c55e;
+        --brand-2: #16a34a;
+        --chip: #1f2937;
+        --card: #0b1220;
+        --border: #1f2937;
+        --danger: #ef4444;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--panel-2), var(--bg));
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+
+      header { margin: 26px 0 10px; }
+      .hero {
+        background: radial-gradient(900px 300px at 20% -20%, #1c2b49 0%, rgba(17,24,39,0) 60%), var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px 20px;
+        text-align: center;
+      }
+      .hero h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: 0.3px; }
+      .hero p { margin: 0; color: var(--muted); }
+
+      .controls {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+      .chip-input {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px;
+        min-height: 46px;
+      }
+      .chip-input input {
+        border: none;
+        background: transparent;
+        color: var(--text);
+        outline: none;
+        padding: 6px 6px;
+        min-width: 160px;
+      }
+
+      .switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .switch input { appearance: none; width: 40px; height: 22px; background: #374151; border-radius: 999px; position: relative; outline: none; cursor: pointer; border: 1px solid var(--border); }
+      .switch input:checked { background: #22c55e; }
+      .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #0b1220; border-radius: 50%; transition: transform .2s ease; }
+      .switch input:checked::after { transform: translateX(18px); }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, var(--brand), var(--brand-2));
+        color: #08130a;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .btn.secondary {
+        background: var(--chip);
+        color: var(--text);
+      }
+
+      .meta { display: flex; align-items: center; gap: 10px; margin: 16px 4px; color: var(--muted); font-size: 13px; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      @media (min-width: 680px) {
+        .grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (min-width: 1024px) {
+        .grid { grid-template-columns: repeat(3, 1fr); }
+      }
+
+      .card {
+        background: radial-gradient(1200px 400px at -10% -20%, #1a2a47 0%, rgba(17,24,39,0) 55%), var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .card h3 { margin: 0 0 8px; font-size: 16px; }
+      .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .chip { background: var(--chip); color: var(--text); border: 1px solid var(--border); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+      .chip.good { background: #0f3a1f; border-color: #1f6a3b; }
+      .chip.missing { background: #3a0f0f; border-color: #6a1f1f; }
+      .chip .x { margin-left: 6px; color: var(--muted); cursor: pointer; }
+      .difficulty { font-weight: 700; }
+
+      .section-title { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+      ul, ol { margin: 0; padding-left: 18px; }
+      li { margin: 4px 0; }
+      .empty { color: var(--muted); text-align: center; padding: 36px 8px; }
+
+      .footer-note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="hero">
+          <h1>What can I make with my ingredients?</h1>
+          <p>Type your ingredients and discover microwave-friendly recipes you can cook now.</p>
+        </div>
+      </header>
+
+      <div class="controls">
+        <div>
+          <div class="label-row">
+            <label>Ingredients you have</label>
+            <div class="switch"><input id="strict" type="checkbox" checked><span>Only show recipes I can fully make</span></div>
+          </div>
+          <div id="chipInput" class="chip-input">
+            <input id="chipText" type="text" placeholder="e.g., cheese, tortilla, eggs (press Enter)" />
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="clear" class="btn secondary" type="button">Clear</button>
+          <button id="share" class="btn" type="button">Share</button>
+        </div>
+      </div>
+
+      <div class="meta" id="meta" style="display:none;">
+        <span id="count">0</span>
+        <span id="countLabel">recipes</span>
+      </div>
+
+      <div id="grid" class="grid"></div>
+
+      <div class="footer-note">All recipes are microwave-friendly and quick to prepare.</div>
+    </div>
+
+    <script>
+      // Data (converted to JavaScript)
+      const recipes = [
+        { title: "Mug Mac & Cheese", ingredients: ["pasta", "cheese", "milk", "water", "salt"], steps: ["Add 1/2 cup pasta and 1/2 cup water into a large mug.", "Microwave for 3-4 minutes, stirring halfway through.", "Add 1/4 cup milk and 1/2 cup shredded cheese.", "Stir and microwave for another 30-60 seconds until creamy."], difficulty: "Easy" },
+        { title: "Microwave Brownie in a Mug", ingredients: ["flour", "sugar", "cocoa", "oil", "water"], steps: ["Mix 4 tbsp flour, 4 tbsp sugar, 2 tbsp cocoa in a mug.", "Add 2 tbsp oil and 2 tbsp water, mix until smooth.", "Microwave for 1-2 minutes until set.", "Let cool for 1 minute before eating."], difficulty: "Easy" },
+        { title: "Cheesy Ramen Bowl", ingredients: ["ramen", "cheese", "water"], steps: ["Break ramen noodles into a bowl, add enough water to cover.", "Microwave for 3-4 minutes until noodles are soft.", "Drain excess water, then stir in cheese until melted."], difficulty: "Very Easy" },
+        { title: "Microwave Scrambled Eggs", ingredients: ["eggs", "milk", "salt", "pepper"], steps: ["Crack 2 eggs into a mug, add 2 tbsp milk, whisk well.", "Microwave 30 seconds, stir, then microwave another 30-60 seconds.", "Season with salt and pepper. Add cheese if you want!"], difficulty: "Easy" },
+        { title: "Microwave Quesadilla", ingredients: ["tortilla", "cheese", "salsa"], steps: ["Place tortilla on a plate, sprinkle cheese on half.", "Fold tortilla over and microwave 1 minute.", "Serve with salsa or hot sauce."], difficulty: "Very Easy" },
+        { title: "Microwave Oatmeal", ingredients: ["oats", "milk", "water", "sugar", "cinnamon"], steps: ["Combine 1/2 cup oats, 1/2 cup milk, 1/2 cup water in a bowl.", "Microwave for 2 minutes, stir, then another 1 minute.", "Top with sugar, cinnamon, or fruit if you have it."], difficulty: "Easy" },
+        { title: "Microwave Pizza Bagel", ingredients: ["bagel", "pizza sauce", "cheese", "pepperoni"], steps: ["Cut bagel in half and place on a plate.", "Spread pizza sauce, sprinkle cheese, add pepperoni.", "Microwave for 1-2 minutes until cheese is melted."], difficulty: "Easy" },
+        { title: "Microwave Mug Omelet", ingredients: ["eggs", "cheese", "veggies", "salt", "pepper"], steps: ["Crack 2 eggs into a mug, add cheese and chopped veggies.", "Mix well, season with salt and pepper.", "Microwave 1-2 minutes, stirring halfway through."], difficulty: "Medium" },
+        { title: "Microwave Rice Bowl", ingredients: ["instant rice", "water", "soy sauce", "egg", "veggies"], steps: ["Add 1 cup instant rice and 1 cup water to a bowl.", "Microwave 5 minutes, let stand for 1 minute.", "Top with soy sauce, fried egg (microwaved separately), and veggies."], difficulty: "Medium" },
+        { title: "Microwave Mug Pancake", ingredients: ["flour", "sugar", "baking powder", "milk", "oil"], steps: ["Mix 4 tbsp flour, 1 tbsp sugar, 1/4 tsp baking powder in a mug.", "Add 3 tbsp milk and 1 tsp oil, mix until smooth.", "Microwave 1-2 minutes until fluffy.", "Top with syrup or fruit if available."], difficulty: "Easy" },
+        { title: "Microwave Nachos", ingredients: ["tortilla chips", "cheese", "salsa"], steps: ["Spread tortilla chips on a plate.", "Sprinkle shredded cheese over the top.", "Microwave for 45-60 seconds until cheese is melted.", "Serve with salsa or guacamole."], difficulty: "Very Easy" },
+        { title: "Microwave Baked Potato", ingredients: ["potato", "salt", "butter", "cheese"], steps: ["Wash a potato, poke holes with a fork.", "Microwave 5-6 minutes, flipping halfway through.", "Top with butter, cheese, or sour cream."], difficulty: "Easy" },
+        { title: "Microwave Hot Dog Wrap", ingredients: ["hot dog", "tortilla", "cheese"], steps: ["Place hot dog in tortilla, sprinkle cheese.", "Wrap it up, place seam-side down on plate.", "Microwave 1-2 minutes until hot."], difficulty: "Easy" },
+        { title: "Microwave Mug Pizza", ingredients: ["flour", "baking powder", "milk", "pizza sauce", "cheese"], steps: ["Mix 4 tbsp flour, 1/4 tsp baking powder, 3 tbsp milk in a mug.", "Spread pizza sauce on top.", "Sprinkle cheese and toppings.", "Microwave 1-2 minutes until cooked."], difficulty: "Medium" },
+        { title: "Microwave Chicken Queso Dip", ingredients: ["cheese", "salsa", "chicken"], steps: ["Mix 1/2 cup shredded cheese and 1/4 cup salsa in a bowl.", "Add cooked chicken if available.", "Microwave 1-2 minutes until melted.", "Stir and serve with chips."], difficulty: "Medium" },
+        { title: "Microwave Mug French Toast", ingredients: ["bread", "egg", "milk", "cinnamon"], steps: ["Cut bread into cubes, place in mug.", "Whisk egg, 3 tbsp milk, cinnamon, pour over bread.", "Microwave 1-2 minutes until set.", "Top with syrup."], difficulty: "Easy" },
+        { title: "Microwave Veggie Stir Fry", ingredients: ["veggies", "soy sauce", "instant rice"], steps: ["Place chopped veggies in a bowl with a splash of water.", "Microwave 3-4 minutes until tender.", "Mix with cooked instant rice and soy sauce."], difficulty: "Medium" },
+        { title: "Microwave Chili Bowl", ingredients: ["canned chili", "cheese", "tortilla chips"], steps: ["Empty canned chili into a bowl.", "Microwave 2-3 minutes until hot.", "Top with cheese and crushed tortilla chips."], difficulty: "Easy" },
+        { title: "Microwave Mug Lasagna", ingredients: ["lasagna noodles", "cheese", "tomato sauce"], steps: ["Break lasagna noodles into small pieces, place in mug with water.", "Microwave 4 minutes until soft.", "Layer with tomato sauce and cheese.", "Microwave another 1-2 minutes until melted."], difficulty: "Medium" },
+        { title: "Microwave Baked Apples", ingredients: ["apple", "cinnamon", "sugar"], steps: ["Slice apple, place in bowl.", "Sprinkle with sugar and cinnamon.", "Microwave 2-3 minutes until soft."], difficulty: "Easy" },
+        { title: "Microwave Mug Cookie", ingredients: ["flour", "sugar", "butter", "chocolate chips"], steps: ["Mix 4 tbsp flour, 2 tbsp sugar, 1 tbsp butter in a mug.", "Stir in 2 tbsp chocolate chips.", "Microwave 1 minute until set."], difficulty: "Easy" },
+        { title: "Microwave Rice Krispie Treat", ingredients: ["marshmallows", "butter", "cereal"], steps: ["Microwave 1 tbsp butter and 1/2 cup marshmallows until melted.", "Stir in 1 cup Rice Krispies cereal.", "Press into a bowl and let cool."], difficulty: "Easy" },
+        { title: "Microwave Mug Cheesecake", ingredients: ["cream cheese", "sugar", "egg", "vanilla"], steps: ["Mix 4 tbsp cream cheese, 2 tbsp sugar, 1 egg yolk, 1/4 tsp vanilla in mug.", "Microwave 1-2 minutes until set.", "Chill in fridge if you want it cold."], difficulty: "Medium" },
+        { title: "Microwave Banana Bread Mug", ingredients: ["banana", "flour", "sugar", "milk"], steps: ["Mash 1 banana in mug.", "Add 4 tbsp flour, 2 tbsp sugar, 2 tbsp milk.", "Microwave 2 minutes until fluffy."], difficulty: "Easy" },
+        { title: "Microwave Cinnamon Roll Mug", ingredients: ["flour", "sugar", "milk", "cinnamon"], steps: ["Mix 6 tbsp flour, 2 tbsp sugar, 3 tbsp milk into dough.", "Roll into strip, sprinkle cinnamon sugar, roll up.", "Place in mug, microwave 1-2 minutes.", "Top with icing if available."], difficulty: "Hard" },
+        { title: "Microwave Mug S'mores", ingredients: ["graham crackers", "chocolate", "marshmallow"], steps: ["Layer graham cracker, chocolate, marshmallow in a mug.", "Microwave 20-30 seconds until gooey."], difficulty: "Very Easy" },
+        { title: "Microwave Apple Crisp", ingredients: ["apple", "oats", "sugar", "butter"], steps: ["Slice apple, place in mug.", "Mix oats, sugar, and butter into crumble topping.", "Sprinkle over apples, microwave 2-3 minutes."], difficulty: "Medium" }
+      ];
+
+      const params = new URLSearchParams(location.search);
+      const state = {
+        have: (params.get('have') || '').split(',').map(s => s.trim()).filter(Boolean),
+        strict: params.get('strict') !== '0'
+      };
+
+      const els = {
+        grid: document.getElementById('grid'),
+        meta: document.getElementById('meta'),
+        count: document.getElementById('count'),
+        countLabel: document.getElementById('countLabel'),
+        clear: document.getElementById('clear'),
+        share: document.getElementById('share'),
+        chipInput: document.getElementById('chipInput'),
+        chipText: document.getElementById('chipText'),
+        strict: document.getElementById('strict')
+      };
+
+      function setInitialInputs() {
+        els.strict.checked = !!state.strict;
+        renderChips();
+      }
+
+      function updateURL() {
+        const params = new URLSearchParams();
+        if (state.have.length) params.set('have', state.have.join(','));
+        params.set('strict', state.strict ? '1' : '0');
+        const qs = params.toString();
+        history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+      }
+
+      function normalize(str) {
+        return (str || '').toLowerCase().trim();
+      }
+
+      function includesAll(haystackList, needles) {
+        const set = new Set(haystackList.map(normalize));
+        return needles.every(n => set.has(normalize(n)));
+      }
+
+      function intersectionCount(aList, bList) {
+        const a = new Set(aList.map(normalize));
+        let c = 0;
+        for (const b of bList) if (a.has(normalize(b))) c++;
+        return c;
+      }
+
+      function filterRecipes(all) {
+        const have = state.have.map(normalize);
+        if (have.length === 0) return [];
+        const list = all.map(r => {
+          const needed = r.ingredients.map(normalize);
+          const hits = intersectionCount(have, needed);
+          const missing = needed.filter(x => !have.includes(x));
+          const canMake = hits === needed.length;
+          return { ...r, _hits: hits, _missing: missing, _canMake: canMake };
+        });
+        const filtered = state.strict
+          ? list.filter(r => r._canMake)
+          : list.filter(r => r._hits > 0);
+        return filtered.sort((a, b) => {
+          if (!state.strict) {
+            if (b._hits !== a._hits) return b._hits - a._hits;
+            if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
+          }
+          return a.title.localeCompare(b.title);
+        });
+      }
+
+      function h(tag, attrs = {}, ...children) {
+        const el = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k === 'class') el.className = v;
+          else if (k === 'html') el.innerHTML = v;
+          else el.setAttribute(k, v);
+        }
+        for (const c of children) {
+          if (Array.isArray(c)) c.forEach(x => x && el.appendChild(x));
+          else if (c instanceof Node) el.appendChild(c);
+          else if (c != null) el.appendChild(document.createTextNode(String(c)));
+        }
+        return el;
+      }
+
+      function renderCards(list) {
+        els.grid.innerHTML = '';
+        if (state.have.length === 0) {
+          els.meta.style.display = 'none';
+          els.grid.appendChild(h('div', { class: 'empty' }, 'Add some ingredients to see what you can make.'));
+          return;
+        }
+        els.meta.style.display = '';
+        els.count.textContent = list.length;
+        els.countLabel.textContent = state.strict ? (list.length === 1 ? 'recipe you can make' : 'recipes you can make') : (list.length === 1 ? 'match' : 'matches');
+
+        if (list.length === 0) {
+          els.grid.appendChild(h('div', { class: 'empty' }, state.strict ? 'No recipes can be fully made with those ingredients.' : 'No close matches yet. Try adding more ingredients.'));
+          return;
+        }
+
+        for (const r of list) {
+          const haveSet = new Set(state.have.map(normalize));
+          const ingChips = h(
+            'div',
+            { class: 'chip-row' },
+            ...r.ingredients.map(i => h('span', { class: `chip ${haveSet.has(normalize(i)) ? 'good' : 'missing'}` }, i))
+          );
+
+          const stepsList = h('ol', {}, ...r.steps.map(s => h('li', {}, s)));
+
+          const card = h(
+            'div',
+            { class: 'card' },
+            h('h3', {}, r.title),
+            h('div', { class: 'chip-row' },
+              h('span', { class: 'chip difficulty' }, r.difficulty),
+              !state.strict && h('span', { class: 'chip' }, `${r._hits} have • ${r._missing.length} missing`)
+            ),
+            h('div', { class: 'section-title' }, 'Ingredients'),
+            ingChips,
+            h('div', { class: 'section-title' }, 'Steps'),
+            stepsList
+          );
+
+          els.grid.appendChild(card);
+        }
+      }
+
+      function renderChips() {
+        // Remove existing chips (keep the input)
+        Array.from(els.chipInput.querySelectorAll('span[data-chip]')).forEach(el => el.remove());
+        for (const item of state.have) {
+          const chip = h('span', { class: 'chip', 'data-chip': item }, item, h('span', { class: 'x', title: 'Remove' }, '×'));
+          chip.querySelector('.x').addEventListener('click', () => {
+            state.have = state.have.filter(x => x !== item);
+            renderChips();
+            applyFilters();
+          });
+          els.chipInput.insertBefore(chip, els.chipText);
+        }
+      }
+
+      function addFromText(raw) {
+        const items = raw.split(/[\n,]/g).map(s => normalize(s)).filter(Boolean);
+        for (const it of items) {
+          if (!state.have.includes(it)) state.have.push(it);
+        }
+        els.chipText.value = '';
+        renderChips();
+        applyFilters();
+      }
+
+      function applyFilters() {
+        const list = filterRecipes(recipes);
+        renderCards(list);
+        updateURL();
+      }
+
+      function setupEvents() {
+        els.strict.addEventListener('change', () => {
+          state.strict = els.strict.checked;
+          applyFilters();
+        });
+
+        els.chipText.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addFromText(els.chipText.value);
+          } else if (e.key === 'Backspace' && els.chipText.value === '' && state.have.length) {
+            state.have.pop();
+            renderChips();
+            applyFilters();
+          }
+        });
+        els.chipText.addEventListener('blur', () => {
+          if (els.chipText.value.trim()) addFromText(els.chipText.value);
+        });
+        els.chipText.addEventListener('paste', (e) => {
+          const text = (e.clipboardData || window.clipboardData).getData('text');
+          if (text && /[,\n]/.test(text)) {
+            e.preventDefault();
+            addFromText(text);
+          }
+        });
+
+        els.clear.addEventListener('click', () => {
+          state.have = [];
+          state.strict = true;
+          setInitialInputs();
+          applyFilters();
+        });
+
+        els.share.addEventListener('click', async () => {
+          const url = location.href;
+          try {
+            await navigator.clipboard.writeText(url);
+            const original = els.share.textContent;
+            els.share.textContent = 'Copied!';
+            setTimeout(() => (els.share.textContent = original), 1200);
+          } catch (e) {
+            alert('Link: ' + url);
+          }
+        });
+      }
+
+      setInitialInputs();
+      setupEvents();
+      applyFilters();
+    </script>
+  </body>
+  </html>
+
+
