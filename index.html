@@ -223,8 +223,9 @@
           </div>
         </div>
         <div style="display:flex; gap:8px;">
+          <button id="generate" class="btn" type="button">🤖 Generate Recipe</button>
           <button id="clear" class="btn secondary" type="button">Clear</button>
-          <button id="share" class="btn" type="button">Share</button>
+          <button id="share" class="btn secondary" type="button">Share</button>
         </div>
       </div>
 
@@ -278,7 +279,8 @@
       const params = new URLSearchParams(location.search);
       const state = {
         have: (params.get('have') || '').split(',').map(s => s.trim()).filter(Boolean),  // User's available ingredients
-        strict: params.get('strict') !== '0'  // Strict mode: only show recipes user can fully make
+        strict: params.get('strict') !== '0',  // Strict mode: only show recipes user can fully make
+        generatedRecipes: loadGeneratedRecipes()  // AI-generated recipes stored locally
       };
 
       // ============================================================================
@@ -289,6 +291,7 @@
         meta: document.getElementById('meta'),           // Results counter container
         count: document.getElementById('count'),         // Number of results
         countLabel: document.getElementById('countLabel'), // "recipes" or "matches" text
+        generate: document.getElementById('generate'),   // AI generate button
         clear: document.getElementById('clear'),         // Clear all button
         share: document.getElementById('share'),         // Share link button
         chipInput: document.getElementById('chipInput'), // Ingredient chips container
@@ -350,6 +353,138 @@
         let c = 0;
         for (const b of bList) if (a.has(normalize(b))) c++;
         return c;
+      }
+
+      // ============================================================================
+      // AI RECIPE GENERATION - Generate custom recipes based on available ingredients
+      // ============================================================================
+      
+      /**
+       * Generate a custom microwave recipe based on available ingredients
+       * @param {Array} ingredients - List of available ingredients
+       * @returns {Object} Generated recipe object
+       */
+      function generateAICRecipe(ingredients) {
+        const recipeTemplates = [
+          {
+            name: "Microwave {main} Bowl",
+            base: ["rice", "pasta", "quinoa", "oats"],
+            patterns: [
+              { main: "Rice", steps: ["Add 1 cup rice and 1.5 cups water to a bowl.", "Microwave 5 minutes, let stand 2 minutes.", "Top with {toppings} and serve hot."] },
+              { main: "Pasta", steps: ["Add 1 cup pasta and enough water to cover in a bowl.", "Microwave 4-5 minutes until tender.", "Drain and mix with {toppings}."] }
+            ]
+          },
+          {
+            name: "Microwave {main} Wrap",
+            base: ["tortilla", "bread"],
+            patterns: [
+              { main: "Quesadilla", steps: ["Place tortilla on a plate.", "Add {fillings} to one half.", "Fold over and microwave 1-2 minutes until melted."] },
+              { main: "Breakfast", steps: ["Scramble {eggs} in a mug for 1 minute.", "Warm tortilla 15 seconds.", "Fill with scrambled eggs and {toppings}."] }
+            ]
+          },
+          {
+            name: "Microwave {main} Mug Cake",
+            base: ["flour", "sugar", "cocoa", "chocolate"],
+            patterns: [
+              { main: "Chocolate", steps: ["Mix 4 tbsp flour, 3 tbsp sugar, 2 tbsp cocoa in a mug.", "Add 3 tbsp milk and 2 tbsp oil.", "Microwave 1-2 minutes until set."] },
+              { main: "Vanilla", steps: ["Mix 4 tbsp flour, 2 tbsp sugar, 1/4 tsp baking powder in a mug.", "Add 3 tbsp milk and 1 tbsp oil.", "Microwave 1-2 minutes until fluffy."] }
+            ]
+          },
+          {
+            name: "Microwave {main} Scramble",
+            base: ["eggs", "cheese"],
+            patterns: [
+              { main: "Cheesy", steps: ["Crack 2 eggs into a mug, whisk with 2 tbsp milk.", "Add {cheese} and microwave 30 seconds.", "Stir and microwave another 30-60 seconds."] }
+            ]
+          }
+        ];
+
+        // Find a suitable template based on ingredients
+        const suitableTemplates = recipeTemplates.filter(template => 
+          template.base.some(base => ingredients.some(ing => normalize(ing).includes(normalize(base))))
+        );
+
+        if (suitableTemplates.length === 0) {
+          // Fallback: create a simple microwave dish
+          return {
+            title: "Microwave Mixed Bowl",
+            ingredients: ingredients,
+            steps: [
+              "Combine all ingredients in a microwave-safe bowl.",
+              "Add 2-3 tablespoons of water or oil as needed.",
+              "Microwave for 2-3 minutes, stirring halfway through.",
+              "Let stand 1 minute before serving."
+            ],
+            difficulty: "Easy",
+            isGenerated: true
+          };
+        }
+
+        const template = suitableTemplates[0];
+        const pattern = template.patterns[Math.floor(Math.random() * template.patterns.length)];
+        
+        // Generate recipe name
+        const mainIngredient = ingredients.find(ing => 
+          template.base.some(base => normalize(ing).includes(normalize(base)))
+        ) || "Mixed";
+        
+        const recipeName = template.name.replace("{main}", mainIngredient.charAt(0).toUpperCase() + mainIngredient.slice(1));
+        
+        // Generate steps with ingredient substitutions
+        const steps = pattern.steps.map(step => {
+          let modifiedStep = step;
+          if (step.includes("{toppings}")) {
+            const toppings = ingredients.filter(ing => 
+              !template.base.some(base => normalize(ing).includes(normalize(base)))
+            ).slice(0, 3).join(", ");
+            modifiedStep = modifiedStep.replace("{toppings}", toppings || "your favorite seasonings");
+          }
+          if (step.includes("{fillings}")) {
+            const fillings = ingredients.slice(0, 3).join(" and ");
+            modifiedStep = modifiedStep.replace("{fillings}", fillings);
+          }
+          if (step.includes("{cheese}")) {
+            const cheese = ingredients.find(ing => normalize(ing).includes("cheese")) || "shredded cheese";
+            modifiedStep = modifiedStep.replace("{cheese}", cheese);
+          }
+          if (step.includes("{eggs}")) {
+            modifiedStep = modifiedStep.replace("{eggs}", "2 eggs");
+          }
+          return modifiedStep;
+        });
+
+        return {
+          title: recipeName,
+          ingredients: ingredients,
+          steps: steps,
+          difficulty: ["Very Easy", "Easy", "Medium"][Math.floor(Math.random() * 3)],
+          isGenerated: true
+        };
+      }
+
+      /**
+       * Load generated recipes from localStorage
+       * @returns {Array} Array of generated recipes
+       */
+      function loadGeneratedRecipes() {
+        try {
+          const stored = localStorage.getItem('generatedRecipes');
+          return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      /**
+       * Save generated recipes to localStorage
+       * @param {Array} recipes - Array of generated recipes to save
+       */
+      function saveGeneratedRecipes(recipes) {
+        try {
+          localStorage.setItem('generatedRecipes', JSON.stringify(recipes));
+        } catch (e) {
+          console.warn('Could not save generated recipes:', e);
+        }
       }
 
       // ============================================================================
