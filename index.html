@@ -3,18 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Microwave-Friendly Recipes</title>
+    <title>Smart Meal Planner</title>
     <!-- 
-      MICROWAVE RECIPE FINDER
-      ======================
-      A single-page web application that helps users find microwave-friendly recipes
-      based on the ingredients they have available. Features include:
+      SMART MEAL PLANNER
+      ==================
+      A comprehensive meal planning application that helps users discover recipes
+      across all meal types and cooking methods. Features include:
       
-      - Ingredient-based recipe filtering with chip-based input
-      - Strict mode (only show recipes you can fully make) vs. loose mode (show close matches)
-      - Real-time filtering and URL state management
-      - Responsive design with dark theme
-      - Shareable links with current ingredient selection
+      - Meal categories: Breakfast, Lunch, Dinner, Desserts
+      - Multiple cooking methods: Microwave, Stove, Air Fryer, Oven, Fridge/Freezer
+      - Ingredient-based recipe filtering with visual chips
+      - AI-powered recipe generation for custom meals
+      - Ingredient requirements display for each recipe
+      - Responsive design with modern UI
+      - Local storage for generated recipes
     -->
     <style>
       /* CSS CUSTOM PROPERTIES - Design system variables */
@@ -65,6 +67,34 @@
       }
       .hero h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: 0.3px; }
       .hero p { margin: 0; color: var(--muted); }
+
+      /* CATEGORY NAVIGATION - Meal type filtering */
+      .category-nav {
+        display: flex;
+        gap: 8px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .category-btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--chip);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+      .category-btn:hover {
+        background: var(--panel);
+        border-color: var(--brand);
+      }
+      .category-btn.active {
+        background: linear-gradient(180deg, var(--brand), var(--brand-2));
+        color: #08130a;
+        border-color: var(--brand);
+      }
 
       /* CONTROLS SECTION - Ingredient input and filtering options */
       .controls {
@@ -131,6 +161,42 @@
         transition: transform .2s ease; 
       }
       .switch input:checked::after { transform: translateX(18px); }
+
+      /* COOKING METHOD FILTERS */
+      .cooking-methods {
+        margin-top: 12px;
+      }
+      .cooking-methods label {
+        font-size: 12px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 8px;
+      }
+      .method-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .method-chip {
+        padding: 4px 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--chip);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+      .method-chip:hover {
+        background: var(--panel);
+        border-color: var(--brand);
+      }
+      .method-chip.active {
+        background: var(--brand);
+        color: #08130a;
+        border-color: var(--brand);
+      }
 
       /* BUTTON STYLES - Primary and secondary action buttons */
       .btn {
@@ -207,8 +273,17 @@
     <div class="container">
       <header>
         <div class="hero">
-          <h1>What can I make with my ingredients?</h1>
-          <p>Type your ingredients and discover microwave-friendly recipes you can cook now.</p>
+          <h1>Smart Meal Planner</h1>
+          <p>Browse all recipes by category and cooking method. Add your ingredients to see which ones you can make right now!</p>
+        </div>
+        
+        <!-- MEAL CATEGORY NAVIGATION -->
+        <div class="category-nav">
+          <button class="category-btn active" data-category="all">All Meals</button>
+          <button class="category-btn" data-category="breakfast">🍳 Breakfast</button>
+          <button class="category-btn" data-category="lunch">🥪 Lunch</button>
+          <button class="category-btn" data-category="dinner">🍽️ Dinner</button>
+          <button class="category-btn" data-category="desserts">🍰 Desserts</button>
         </div>
       </header>
 
@@ -219,9 +294,23 @@
             <div class="switch"><input id="strict" type="checkbox" checked><span>Only show recipes I can fully make</span></div>
           </div>
           <div id="chipInput" class="chip-input">
-            <input id="chipText" type="text" placeholder="e.g., cheese, tortilla, eggs (press Enter)" />
+            <input id="chipText" type="text" placeholder="e.g., chicken, rice, vegetables (press Enter)" />
           </div>
         </div>
+        
+        <!-- COOKING METHOD FILTERS -->
+        <div class="cooking-methods">
+          <label>Cooking Methods:</label>
+          <div class="method-chips">
+            <span class="method-chip active" data-method="all">All</span>
+            <span class="method-chip" data-method="microwave">⚡ Microwave</span>
+            <span class="method-chip" data-method="stove">🔥 Stove</span>
+            <span class="method-chip" data-method="air-fryer">🌪️ Air Fryer</span>
+            <span class="method-chip" data-method="oven">🔥 Oven</span>
+            <span class="method-chip" data-method="no-cook">❄️ No-Cook</span>
+          </div>
+        </div>
+        
         <div style="display:flex; gap:8px;">
           <button id="generate" class="btn" type="button">🤖 Generate Recipe</button>
           <button id="clear" class="btn secondary" type="button">Clear</button>
@@ -236,41 +325,61 @@
 
       <div id="grid" class="grid"></div>
 
-      <div class="footer-note">All recipes are microwave-friendly and quick to prepare.</div>
+      <div class="footer-note">All recipes are microwave-friendly and quick to prepare. Add ingredients to see which ones you can make!</div>
     </div>
 
     <script>
       // ============================================================================
-      // RECIPE DATA - Collection of microwave-friendly recipes with ingredients and steps
+      // RECIPE DATA - Comprehensive collection of microwave-friendly recipes by meal type
       // ============================================================================
       const recipes = [
-        { title: "Mug Mac & Cheese", ingredients: ["pasta", "cheese", "milk", "water", "salt"], steps: ["Add 1/2 cup pasta and 1/2 cup water into a large mug.", "Microwave for 3-4 minutes, stirring halfway through.", "Add 1/4 cup milk and 1/2 cup shredded cheese.", "Stir and microwave for another 30-60 seconds until creamy."], difficulty: "Easy" },
-        { title: "Microwave Brownie in a Mug", ingredients: ["flour", "sugar", "cocoa", "oil", "water"], steps: ["Mix 4 tbsp flour, 4 tbsp sugar, 2 tbsp cocoa in a mug.", "Add 2 tbsp oil and 2 tbsp water, mix until smooth.", "Microwave for 1-2 minutes until set.", "Let cool for 1 minute before eating."], difficulty: "Easy" },
-        { title: "Cheesy Ramen Bowl", ingredients: ["ramen", "cheese", "water"], steps: ["Break ramen noodles into a bowl, add enough water to cover.", "Microwave for 3-4 minutes until noodles are soft.", "Drain excess water, then stir in cheese until melted."], difficulty: "Very Easy" },
-        { title: "Microwave Scrambled Eggs", ingredients: ["eggs", "milk", "salt", "pepper"], steps: ["Crack 2 eggs into a mug, add 2 tbsp milk, whisk well.", "Microwave 30 seconds, stir, then microwave another 30-60 seconds.", "Season with salt and pepper. Add cheese if you want!"], difficulty: "Easy" },
-        { title: "Microwave Quesadilla", ingredients: ["tortilla", "cheese", "salsa"], steps: ["Place tortilla on a plate, sprinkle cheese on half.", "Fold tortilla over and microwave 1 minute.", "Serve with salsa or hot sauce."], difficulty: "Very Easy" },
-        { title: "Microwave Oatmeal", ingredients: ["oats", "milk", "water", "sugar", "cinnamon"], steps: ["Combine 1/2 cup oats, 1/2 cup milk, 1/2 cup water in a bowl.", "Microwave for 2 minutes, stir, then another 1 minute.", "Top with sugar, cinnamon, or fruit if you have it."], difficulty: "Easy" },
-        { title: "Microwave Pizza Bagel", ingredients: ["bagel", "pizza sauce", "cheese", "pepperoni"], steps: ["Cut bagel in half and place on a plate.", "Spread pizza sauce, sprinkle cheese, add pepperoni.", "Microwave for 1-2 minutes until cheese is melted."], difficulty: "Easy" },
-        { title: "Microwave Mug Omelet", ingredients: ["eggs", "cheese", "veggies", "salt", "pepper"], steps: ["Crack 2 eggs into a mug, add cheese and chopped veggies.", "Mix well, season with salt and pepper.", "Microwave 1-2 minutes, stirring halfway through."], difficulty: "Medium" },
-        { title: "Microwave Rice Bowl", ingredients: ["instant rice", "water", "soy sauce", "egg", "veggies"], steps: ["Add 1 cup instant rice and 1 cup water to a bowl.", "Microwave 5 minutes, let stand for 1 minute.", "Top with soy sauce, fried egg (microwaved separately), and veggies."], difficulty: "Medium" },
-        { title: "Microwave Mug Pancake", ingredients: ["flour", "sugar", "baking powder", "milk", "oil"], steps: ["Mix 4 tbsp flour, 1 tbsp sugar, 1/4 tsp baking powder in a mug.", "Add 3 tbsp milk and 1 tsp oil, mix until smooth.", "Microwave 1-2 minutes until fluffy.", "Top with syrup or fruit if available."], difficulty: "Easy" },
-        { title: "Microwave Nachos", ingredients: ["tortilla chips", "cheese", "salsa"], steps: ["Spread tortilla chips on a plate.", "Sprinkle shredded cheese over the top.", "Microwave for 45-60 seconds until cheese is melted.", "Serve with salsa or guacamole."], difficulty: "Very Easy" },
-        { title: "Microwave Baked Potato", ingredients: ["potato", "salt", "butter", "cheese"], steps: ["Wash a potato, poke holes with a fork.", "Microwave 5-6 minutes, flipping halfway through.", "Top with butter, cheese, or sour cream."], difficulty: "Easy" },
-        { title: "Microwave Hot Dog Wrap", ingredients: ["hot dog", "tortilla", "cheese"], steps: ["Place hot dog in tortilla, sprinkle cheese.", "Wrap it up, place seam-side down on plate.", "Microwave 1-2 minutes until hot."], difficulty: "Easy" },
-        { title: "Microwave Mug Pizza", ingredients: ["flour", "baking powder", "milk", "pizza sauce", "cheese"], steps: ["Mix 4 tbsp flour, 1/4 tsp baking powder, 3 tbsp milk in a mug.", "Spread pizza sauce on top.", "Sprinkle cheese and toppings.", "Microwave 1-2 minutes until cooked."], difficulty: "Medium" },
-        { title: "Microwave Chicken Queso Dip", ingredients: ["cheese", "salsa", "chicken"], steps: ["Mix 1/2 cup shredded cheese and 1/4 cup salsa in a bowl.", "Add cooked chicken if available.", "Microwave 1-2 minutes until melted.", "Stir and serve with chips."], difficulty: "Medium" },
-        { title: "Microwave Mug French Toast", ingredients: ["bread", "egg", "milk", "cinnamon"], steps: ["Cut bread into cubes, place in mug.", "Whisk egg, 3 tbsp milk, cinnamon, pour over bread.", "Microwave 1-2 minutes until set.", "Top with syrup."], difficulty: "Easy" },
-        { title: "Microwave Veggie Stir Fry", ingredients: ["veggies", "soy sauce", "instant rice"], steps: ["Place chopped veggies in a bowl with a splash of water.", "Microwave 3-4 minutes until tender.", "Mix with cooked instant rice and soy sauce."], difficulty: "Medium" },
-        { title: "Microwave Chili Bowl", ingredients: ["canned chili", "cheese", "tortilla chips"], steps: ["Empty canned chili into a bowl.", "Microwave 2-3 minutes until hot.", "Top with cheese and crushed tortilla chips."], difficulty: "Easy" },
-        { title: "Microwave Mug Lasagna", ingredients: ["lasagna noodles", "cheese", "tomato sauce"], steps: ["Break lasagna noodles into small pieces, place in mug with water.", "Microwave 4 minutes until soft.", "Layer with tomato sauce and cheese.", "Microwave another 1-2 minutes until melted."], difficulty: "Medium" },
-        { title: "Microwave Baked Apples", ingredients: ["apple", "cinnamon", "sugar"], steps: ["Slice apple, place in bowl.", "Sprinkle with sugar and cinnamon.", "Microwave 2-3 minutes until soft."], difficulty: "Easy" },
-        { title: "Microwave Mug Cookie", ingredients: ["flour", "sugar", "butter", "chocolate chips"], steps: ["Mix 4 tbsp flour, 2 tbsp sugar, 1 tbsp butter in a mug.", "Stir in 2 tbsp chocolate chips.", "Microwave 1 minute until set."], difficulty: "Easy" },
-        { title: "Microwave Rice Krispie Treat", ingredients: ["marshmallows", "butter", "cereal"], steps: ["Microwave 1 tbsp butter and 1/2 cup marshmallows until melted.", "Stir in 1 cup Rice Krispies cereal.", "Press into a bowl and let cool."], difficulty: "Easy" },
-        { title: "Microwave Mug Cheesecake", ingredients: ["cream cheese", "sugar", "egg", "vanilla"], steps: ["Mix 4 tbsp cream cheese, 2 tbsp sugar, 1 egg yolk, 1/4 tsp vanilla in mug.", "Microwave 1-2 minutes until set.", "Chill in fridge if you want it cold."], difficulty: "Medium" },
-        { title: "Microwave Banana Bread Mug", ingredients: ["banana", "flour", "sugar", "milk"], steps: ["Mash 1 banana in mug.", "Add 4 tbsp flour, 2 tbsp sugar, 2 tbsp milk.", "Microwave 2 minutes until fluffy."], difficulty: "Easy" },
-        { title: "Microwave Cinnamon Roll Mug", ingredients: ["flour", "sugar", "milk", "cinnamon"], steps: ["Mix 6 tbsp flour, 2 tbsp sugar, 3 tbsp milk into dough.", "Roll into strip, sprinkle cinnamon sugar, roll up.", "Place in mug, microwave 1-2 minutes.", "Top with icing if available."], difficulty: "Hard" },
-        { title: "Microwave Mug S'mores", ingredients: ["graham crackers", "chocolate", "marshmallow"], steps: ["Layer graham cracker, chocolate, marshmallow in a mug.", "Microwave 20-30 seconds until gooey."], difficulty: "Very Easy" },
-        { title: "Microwave Apple Crisp", ingredients: ["apple", "oats", "sugar", "butter"], steps: ["Slice apple, place in mug.", "Mix oats, sugar, and butter into crumble topping.", "Sprinkle over apples, microwave 2-3 minutes."], difficulty: "Medium" }
+        // BREAKFAST RECIPES
+        { title: "Microwave Scrambled Eggs in a Mug", category: "breakfast", method: "microwave", ingredients: ["eggs", "milk", "salt", "pepper", "butter"], steps: ["Crack 2 eggs into a large mug.", "Add 2 tbsp milk, salt, and pepper.", "Whisk well.", "Microwave 30 seconds, stir, repeat until set."], difficulty: "Very Easy", time: "3 min" },
+        { title: "Omelet in a Mug", category: "breakfast", method: "microwave", ingredients: ["eggs", "cheese", "veggies", "salt", "pepper"], steps: ["Crack 2 eggs into mug.", "Add cheese and chopped veggies.", "Season with salt and pepper.", "Microwave 1-2 minutes, stirring halfway."], difficulty: "Easy", time: "4 min" },
+        { title: "Microwave Poached Egg on Toast", category: "breakfast", method: "microwave", ingredients: ["egg", "bread", "vinegar", "salt"], steps: ["Fill mug with water and splash of vinegar.", "Crack egg into water.", "Microwave 1 minute.", "Toast bread and top with poached egg."], difficulty: "Medium", time: "5 min" },
+        { title: "Instant Oatmeal with Peanut Butter & Banana", category: "breakfast", method: "microwave", ingredients: ["instant oats", "peanut butter", "banana", "milk"], steps: ["Cook instant oats in microwave.", "Stir in peanut butter.", "Top with sliced banana.", "Add milk if desired."], difficulty: "Very Easy", time: "3 min" },
+        { title: "Mug Pancake", category: "breakfast", method: "microwave", ingredients: ["flour", "milk", "egg", "sugar", "baking powder"], steps: ["Mix 4 tbsp flour, 1 tbsp sugar, 1/4 tsp baking powder.", "Add 3 tbsp milk and 1 egg.", "Mix until smooth.", "Microwave 1-2 minutes until fluffy."], difficulty: "Easy", time: "4 min" },
+        { title: "Microwave French Toast Mug", category: "breakfast", method: "microwave", ingredients: ["bread", "egg", "milk", "cinnamon", "vanilla"], steps: ["Cut bread into cubes.", "Whisk egg, milk, cinnamon, vanilla.", "Pour over bread cubes.", "Microwave 1-2 minutes until set."], difficulty: "Easy", time: "4 min" },
+        { title: "Cinnamon Roll Mug Cake", category: "breakfast", method: "microwave", ingredients: ["canned cinnamon rolls", "flour", "milk"], steps: ["Mix 6 tbsp flour, 2 tbsp sugar, 3 tbsp milk.", "Roll into strip, sprinkle cinnamon sugar.", "Place in mug, microwave 1-2 minutes.", "Top with icing from can."], difficulty: "Medium", time: "5 min" },
+        { title: "Breakfast Burrito", category: "breakfast", method: "microwave", ingredients: ["tortilla", "egg", "cheese", "salsa"], steps: ["Scramble egg in mug.", "Warm tortilla 15 seconds.", "Fill with egg, cheese, salsa.", "Roll up and enjoy."], difficulty: "Easy", time: "5 min" },
+        { title: "Microwave Quesadilla", category: "breakfast", method: "microwave", ingredients: ["tortilla", "cheese", "egg"], steps: ["Scramble egg in mug.", "Place tortilla on plate.", "Add cheese and egg.", "Fold and microwave 1 minute."], difficulty: "Very Easy", time: "3 min" },
+        { title: "Microwave English Muffin Pizza", category: "breakfast", method: "microwave", ingredients: ["english muffin", "egg", "cheese", "salt", "pepper"], steps: ["Split and toast english muffin.", "Scramble egg with salt and pepper.", "Top muffin with egg and cheese.", "Microwave 30 seconds until cheese melts."], difficulty: "Easy", time: "4 min" },
+        
+        // LUNCH RECIPES
+        { title: "Microwave Mac & Cheese in a Mug", category: "lunch", method: "microwave", ingredients: ["pasta", "cheese", "milk", "butter"], steps: ["Add 1/2 cup pasta and water to mug.", "Microwave 3-4 minutes.", "Drain and add cheese, milk, butter.", "Microwave 30 seconds until creamy."], difficulty: "Easy", time: "6 min" },
+        { title: "Microwave Ramen with Egg & Veggies", category: "lunch", method: "microwave", ingredients: ["ramen", "egg", "vegetables", "soy sauce"], steps: ["Cook ramen according to package.", "Add vegetables and cook 1 more minute.", "Crack egg into hot broth.", "Let sit 1 minute, stir gently."], difficulty: "Easy", time: "5 min" },
+        { title: "Microwave Quesadilla", category: "lunch", method: "microwave", ingredients: ["tortilla", "cheese", "salsa"], steps: ["Place tortilla on plate.", "Sprinkle cheese on half.", "Fold over and microwave 1 minute.", "Serve with salsa."], difficulty: "Very Easy", time: "2 min" },
+        { title: "Microwave Hot Pocket Dupe", category: "lunch", method: "microwave", ingredients: ["tortilla", "ham", "cheese"], steps: ["Place tortilla on plate.", "Add ham and cheese.", "Fold into pocket shape.", "Microwave 1-2 minutes until hot."], difficulty: "Very Easy", time: "3 min" },
+        { title: "Microwave Nachos", category: "lunch", method: "microwave", ingredients: ["tortilla chips", "cheese", "salsa"], steps: ["Spread chips on plate.", "Sprinkle cheese over top.", "Microwave 45-60 seconds.", "Top with salsa."], difficulty: "Very Easy", time: "2 min" },
+        { title: "Microwave Chili", category: "lunch", method: "microwave", ingredients: ["canned chili", "cheese", "onions"], steps: ["Empty chili into bowl.", "Microwave 2-3 minutes.", "Top with cheese and onions.", "Serve hot."], difficulty: "Very Easy", time: "4 min" },
+        { title: "Microwave Grilled Cheese", category: "lunch", method: "microwave", ingredients: ["bread", "cheese", "butter"], steps: ["Butter bread slices.", "Add cheese between slices.", "Microwave 1-2 minutes.", "Flip and microwave 30 seconds more."], difficulty: "Very Easy", time: "3 min" },
+        { title: "Microwave Tomato Soup", category: "lunch", method: "microwave", ingredients: ["canned tomato soup", "milk", "croutons"], steps: ["Mix soup with milk in bowl.", "Microwave 2-3 minutes.", "Stir and top with croutons.", "Serve hot."], difficulty: "Very Easy", time: "4 min" },
+        { title: "Microwave Baked Potato", category: "lunch", method: "microwave", ingredients: ["potato", "cheese", "butter", "salt"], steps: ["Wash potato and poke holes.", "Microwave 5-6 minutes.", "Cut open and add butter, cheese.", "Microwave 30 seconds more."], difficulty: "Easy", time: "7 min" },
+        { title: "Microwave Sweet Potato", category: "lunch", method: "microwave", ingredients: ["sweet potato", "cinnamon", "butter"], steps: ["Wash sweet potato and poke holes.", "Microwave 6-8 minutes.", "Cut open and add butter, cinnamon.", "Serve warm."], difficulty: "Easy", time: "8 min" },
+        
+        // DINNER RECIPES
+        { title: "Microwave Mug Pizza", category: "dinner", method: "microwave", ingredients: ["flour", "baking powder", "milk", "pizza sauce", "cheese"], steps: ["Mix 4 tbsp flour, 1/4 tsp baking powder, 3 tbsp milk.", "Spread pizza sauce on top.", "Add cheese and toppings.", "Microwave 1-2 minutes."], difficulty: "Medium", time: "5 min" },
+        { title: "Microwave Teriyaki Rice Bowl", category: "dinner", method: "microwave", ingredients: ["rice", "chicken", "teriyaki sauce", "vegetables"], steps: ["Cook rice in microwave.", "Add cooked chicken and vegetables.", "Drizzle with teriyaki sauce.", "Microwave 1 minute to heat through."], difficulty: "Easy", time: "8 min" },
+        { title: "Microwave Chicken Quesadilla", category: "dinner", method: "microwave", ingredients: ["tortilla", "chicken", "cheese", "salsa"], steps: ["Shred cooked chicken.", "Place on tortilla with cheese.", "Fold and microwave 1-2 minutes.", "Serve with salsa."], difficulty: "Easy", time: "4 min" },
+        { title: "Microwave Mac & Cheese Upgrade", category: "dinner", method: "microwave", ingredients: ["pasta", "cheese", "milk", "bacon", "breadcrumbs"], steps: ["Cook pasta and cheese sauce.", "Add crumbled bacon.", "Top with breadcrumbs.", "Microwave 1 minute to crisp topping."], difficulty: "Easy", time: "7 min" },
+        { title: "Microwave Nacho Supreme", category: "dinner", method: "microwave", ingredients: ["tortilla chips", "cheese", "ground beef", "jalapeños", "sour cream"], steps: ["Cook ground beef in microwave.", "Layer chips, beef, cheese, jalapeños.", "Microwave 1-2 minutes.", "Top with sour cream."], difficulty: "Easy", time: "6 min" },
+        { title: "Microwave Enchilada Mug", category: "dinner", method: "microwave", ingredients: ["tortilla", "chicken", "enchilada sauce", "cheese"], steps: ["Shred cooked chicken.", "Mix with enchilada sauce.", "Layer in mug with tortilla pieces.", "Top with cheese and microwave 2 minutes."], difficulty: "Medium", time: "6 min" },
+        { title: "Microwave Chili Mac", category: "dinner", method: "microwave", ingredients: ["pasta", "chili", "cheese", "onions"], steps: ["Cook pasta in microwave.", "Mix with canned chili.", "Add cheese and onions.", "Microwave 1 minute to melt cheese."], difficulty: "Easy", time: "7 min" },
+        { title: "Microwave Hot Dog in Bun", category: "dinner", method: "microwave", ingredients: ["hot dog", "bun", "mustard", "ketchup"], steps: ["Place hot dog in bun.", "Microwave 1 minute.", "Add condiments.", "Serve immediately."], difficulty: "Very Easy", time: "2 min" },
+        { title: "Microwave Sloppy Joe", category: "dinner", method: "microwave", ingredients: ["ground beef", "sloppy joe sauce", "bun"], steps: ["Cook ground beef in microwave.", "Mix with sauce.", "Heat bun 15 seconds.", "Fill bun with mixture."], difficulty: "Easy", time: "5 min" },
+        { title: "Microwave Burrito Bowl", category: "dinner", method: "microwave", ingredients: ["rice", "beans", "cheese", "salsa", "sour cream"], steps: ["Cook rice in microwave.", "Heat beans separately.", "Layer rice, beans, cheese.", "Top with salsa and sour cream."], difficulty: "Easy", time: "8 min" },
+        
+        // DESSERT RECIPES
+        { title: "Microwave Brownie in a Mug", category: "desserts", method: "microwave", ingredients: ["flour", "cocoa", "sugar", "oil", "water"], steps: ["Mix 4 tbsp flour, 4 tbsp sugar, 2 tbsp cocoa.", "Add 2 tbsp oil and 2 tbsp water.", "Mix until smooth.", "Microwave 1-2 minutes."], difficulty: "Easy", time: "3 min" },
+        { title: "Microwave Chocolate Chip Cookie", category: "desserts", method: "microwave", ingredients: ["flour", "sugar", "butter", "chocolate chips"], steps: ["Mix 4 tbsp flour, 2 tbsp sugar, 1 tbsp butter.", "Stir in 2 tbsp chocolate chips.", "Microwave 1 minute.", "Let cool slightly."], difficulty: "Easy", time: "3 min" },
+        { title: "Microwave S'mores", category: "desserts", method: "microwave", ingredients: ["graham crackers", "chocolate", "marshmallow"], steps: ["Layer graham cracker, chocolate, marshmallow.", "Microwave 20-30 seconds.", "Top with another graham cracker.", "Enjoy while warm."], difficulty: "Very Easy", time: "1 min" },
+        { title: "Microwave Fudge", category: "desserts", method: "microwave", ingredients: ["chocolate chips", "sweetened condensed milk", "vanilla"], steps: ["Mix chocolate chips and condensed milk.", "Microwave 1 minute, stir.", "Add vanilla and stir.", "Pour into dish and chill."], difficulty: "Easy", time: "5 min" },
+        { title: "Microwave Rice Krispie Treats", category: "desserts", method: "microwave", ingredients: ["marshmallows", "butter", "rice krispies"], steps: ["Microwave butter and marshmallows 1 minute.", "Stir until smooth.", "Mix in rice krispies.", "Press into dish and cool."], difficulty: "Easy", time: "5 min" },
+        { title: "Microwave Mug Cinnamon Roll", category: "desserts", method: "microwave", ingredients: ["flour", "sugar", "milk", "cinnamon", "butter"], steps: ["Mix 6 tbsp flour, 2 tbsp sugar, 3 tbsp milk.", "Roll into strip, sprinkle cinnamon sugar.", "Roll up and place in mug.", "Microwave 1-2 minutes."], difficulty: "Medium", time: "5 min" },
+        { title: "Microwave Cheesecake in a Mug", category: "desserts", method: "microwave", ingredients: ["cream cheese", "sugar", "egg", "vanilla"], steps: ["Mix 4 tbsp cream cheese, 2 tbsp sugar.", "Add 1 egg yolk and vanilla.", "Microwave 1-2 minutes.", "Chill if desired."], difficulty: "Medium", time: "4 min" },
+        { title: "Microwave Peanut Butter Mug Cake", category: "desserts", method: "microwave", ingredients: ["flour", "sugar", "peanut butter", "milk", "oil"], steps: ["Mix 4 tbsp flour, 2 tbsp sugar.", "Add 2 tbsp peanut butter, 3 tbsp milk, 1 tbsp oil.", "Mix until smooth.", "Microwave 1-2 minutes."], difficulty: "Easy", time: "3 min" },
+        { title: "Microwave Nutella Lava Cake", category: "desserts", method: "microwave", ingredients: ["flour", "sugar", "cocoa", "nutella", "milk"], steps: ["Mix dry ingredients.", "Add milk and 2 tbsp nutella.", "Mix until smooth.", "Microwave 1 minute."], difficulty: "Easy", time: "3 min" },
+        { title: "Microwave Marshmallow Mug Cake", category: "desserts", method: "microwave", ingredients: ["flour", "sugar", "milk", "marshmallows"], steps: ["Mix 4 tbsp flour, 2 tbsp sugar, 3 tbsp milk.", "Add 3-4 marshmallows.", "Microwave 1-2 minutes.", "Top with more marshmallows."], difficulty: "Easy", time: "3 min" }
       ];
 
       // ============================================================================
@@ -280,6 +389,8 @@
       const state = {
         have: (params.get('have') || '').split(',').map(s => s.trim()).filter(Boolean),  // User's available ingredients
         strict: params.get('strict') !== '0',  // Strict mode: only show recipes user can fully make
+        category: params.get('category') || 'all',  // Selected meal category
+        method: params.get('method') || 'all',  // Selected cooking method
         generatedRecipes: loadGeneratedRecipes()  // AI-generated recipes stored locally
       };
 
@@ -296,7 +407,9 @@
         share: document.getElementById('share'),         // Share link button
         chipInput: document.getElementById('chipInput'), // Ingredient chips container
         chipText: document.getElementById('chipText'),   // Text input for new ingredients
-        strict: document.getElementById('strict')        // Strict mode toggle
+        strict: document.getElementById('strict'),       // Strict mode toggle
+        categoryBtns: document.querySelectorAll('.category-btn'), // Category filter buttons
+        methodChips: document.querySelectorAll('.method-chip')     // Cooking method filter chips
       };
 
       // ============================================================================
@@ -305,6 +418,16 @@
       function setInitialInputs() {
         els.strict.checked = !!state.strict;
         renderChips();
+        
+        // Set active category button
+        els.categoryBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.category === state.category);
+        });
+        
+        // Set active method chip
+        els.methodChips.forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.method === state.method);
+        });
       }
 
       // ============================================================================
@@ -314,6 +437,8 @@
         const params = new URLSearchParams();
         if (state.have.length) params.set('have', state.have.join(','));
         params.set('strict', state.strict ? '1' : '0');
+        if (state.category !== 'all') params.set('category', state.category);
+        if (state.method !== 'all') params.set('method', state.method);
         const qs = params.toString();
         history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
       }
@@ -455,9 +580,12 @@
 
         return {
           title: recipeName,
+          category: state.category !== 'all' ? state.category : ['breakfast', 'lunch', 'dinner', 'desserts'][Math.floor(Math.random() * 4)],
+          method: state.method !== 'all' ? state.method : ['microwave', 'stove', 'air-fryer', 'oven', 'no-cook'][Math.floor(Math.random() * 5)],
           ingredients: ingredients,
           steps: steps,
           difficulty: ["Very Easy", "Easy", "Medium"][Math.floor(Math.random() * 3)],
+          time: ["5 min", "10 min", "15 min", "20 min"][Math.floor(Math.random() * 4)],
           isGenerated: true
         };
       }
@@ -492,36 +620,56 @@
       // ============================================================================
       
       /**
-       * Filter recipes based on user's available ingredients and strict mode setting
+       * Filter recipes based on user's available ingredients, category, cooking method, and strict mode
        * @param {Array} all - All available recipes
-       * @returns {Array} Filtered and sorted recipes
+       * @returns {Array} Filtered and sorted recipes (all visible, makeable ones on top)
        */
       function filterRecipes(all) {
         const have = state.have.map(normalize);
-        if (have.length === 0) return [];  // No ingredients = no results
+        
+        // Combine original recipes with generated ones
+        const allRecipes = [...all, ...state.generatedRecipes];
+        
+        // Filter by category first
+        let filtered = allRecipes;
+        if (state.category !== 'all') {
+          filtered = filtered.filter(r => r.category === state.category);
+        }
+        
+        // Filter by cooking method
+        if (state.method !== 'all') {
+          filtered = filtered.filter(r => r.method === state.method);
+        }
         
         // Calculate match statistics for each recipe
-        const list = all.map(r => {
+        const list = filtered.map(r => {
           const needed = r.ingredients.map(normalize);
           const hits = intersectionCount(have, needed);           // How many ingredients user has
           const missing = needed.filter(x => !have.includes(x)); // What's still needed
           const canMake = hits === needed.length;                // Can make complete recipe
-          return { ...r, _hits: hits, _missing: missing, _canMake: canMake };
+          const partialMatch = hits > 0;                         // Has some ingredients
+          return { ...r, _hits: hits, _missing: missing, _canMake: canMake, _partialMatch: partialMatch };
         });
         
-        // Apply filtering based on strict mode
-        const filtered = state.strict
-          ? list.filter(r => r._canMake)      // Strict: only complete matches
-          : list.filter(r => r._hits > 0);    // Loose: any partial matches
-        
-        // Sort results for optimal user experience
-        return filtered.sort((a, b) => {
+        // Sort results: makeable recipes first, then partial matches, then everything else
+        return list.sort((a, b) => {
+          // First priority: recipes you can fully make
+          if (a._canMake && !b._canMake) return -1;
+          if (!a._canMake && b._canMake) return 1;
+          
+          // Second priority: partial matches (if not in strict mode)
           if (!state.strict) {
-            // Loose mode: prioritize by match count, then by fewest missing ingredients
-            if (b._hits !== a._hits) return b._hits - a._hits;
-            if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
+            if (a._partialMatch && !b._partialMatch) return -1;
+            if (!a._partialMatch && b._partialMatch) return 1;
+            
+            // Within partial matches, sort by match count
+            if (a._partialMatch && b._partialMatch) {
+              if (b._hits !== a._hits) return b._hits - a._hits;
+              if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
+            }
           }
-          // Alphabetical by title as final sort
+          
+          // Final sort: alphabetical by title
           return a.title.localeCompare(b.title);
         });
       }
@@ -563,26 +711,30 @@
       function renderCards(list) {
         els.grid.innerHTML = '';
         
-        // Show placeholder if no ingredients selected
-        if (state.have.length === 0) {
-          els.meta.style.display = 'none';
-          els.grid.appendChild(h('div', { class: 'empty' }, 'Add some ingredients to see what you can make.'));
-          return;
-        }
-        
-        // Show results counter
+        // Always show results counter (since we show all recipes now)
         els.meta.style.display = '';
         els.count.textContent = list.length;
-        els.countLabel.textContent = state.strict 
-          ? (list.length === 1 ? 'recipe you can make' : 'recipes you can make') 
-          : (list.length === 1 ? 'match' : 'matches');
+        
+        // Update count label based on what's being shown
+        if (state.have.length === 0) {
+          els.countLabel.textContent = list.length === 1 ? 'recipe available' : 'recipes available';
+        } else {
+          const makeableCount = list.filter(r => r._canMake).length;
+          const partialCount = list.filter(r => r._partialMatch && !r._canMake).length;
+          
+          if (makeableCount > 0) {
+            els.countLabel.textContent = `${makeableCount} you can make • ${list.length} total`;
+          } else if (partialCount > 0) {
+            els.countLabel.textContent = `${partialCount} partial matches • ${list.length} total`;
+          } else {
+            els.countLabel.textContent = `${list.length} recipes (add ingredients to see matches)`;
+          }
+        }
 
-        // Show empty state if no matches
+        // Show empty state only if no recipes match category/method filters
         if (list.length === 0) {
           els.grid.appendChild(h('div', { class: 'empty' }, 
-            state.strict 
-              ? 'No recipes can be fully made with those ingredients.' 
-              : 'No close matches yet. Try adding more ingredients.'));
+            'No recipes found for the selected category and cooking method. Try changing your filters.'));
           return;
         }
 
@@ -609,8 +761,13 @@
             h('h3', {}, r.title),
             h('div', { class: 'chip-row' },
               h('span', { class: 'chip difficulty' }, r.difficulty),
-              // Show match stats in loose mode
-              !state.strict && h('span', { class: 'chip' }, `${r._hits} have • ${r._missing.length} missing`)
+              h('span', { class: 'chip' }, r.time || 'Quick'),
+              h('span', { class: 'chip' }, r.method || 'microwave'),
+              // Show match stats for all recipes
+              state.have.length > 0 && h('span', { class: 'chip' }, 
+                r._canMake ? '✅ Can make' : 
+                r._partialMatch ? `${r._hits} have • ${r._missing.length} missing` : 
+                '❌ Need ingredients')
             ),
             h('div', { class: 'section-title' }, 'Ingredients'),
             ingChips,
@@ -688,6 +845,26 @@
           applyFilters();
         });
 
+        // Category filter buttons
+        els.categoryBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            els.categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.category = btn.dataset.category;
+            applyFilters();
+          });
+        });
+
+        // Cooking method filter chips
+        els.methodChips.forEach(chip => {
+          chip.addEventListener('click', () => {
+            els.methodChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            state.method = chip.dataset.method;
+            applyFilters();
+          });
+        });
+
         // Ingredient input handling
         els.chipText.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ',') {
@@ -719,6 +896,8 @@
         els.clear.addEventListener('click', () => {
           state.have = [];
           state.strict = true;
+          state.category = 'all';
+          state.method = 'all';
           setInitialInputs();
           applyFilters();
         });
