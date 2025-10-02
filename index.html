@@ -307,6 +307,8 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        cursor: pointer;
+        position: relative;
       }
       .chip:hover {
         transform: translateY(-1px);
@@ -328,9 +330,46 @@
         cursor: pointer; 
         font-weight: bold;
         transition: color 0.2s ease;
+        z-index: 2;
       }
       .chip .x:hover {
         color: var(--danger);
+      }
+
+      /* Shopping buttons for missing ingredients */
+      .shop-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+      .shop-btn {
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .shop-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      }
+      .shop-btn.instacart {
+        background: linear-gradient(135deg, #00a86b, #00d4aa);
+      }
+      .shop-btn.doordash {
+        background: linear-gradient(135deg, #ff3000, #ff6b35);
+      }
+      .shop-btn.amazon {
+        background: linear-gradient(135deg, #ff9900, #ffad33);
       }
 
       /* TOGGLE SWITCH - Enhanced custom styled checkbox */
@@ -1592,10 +1631,10 @@
           
           // Second priority: sort by number of matching ingredients (higher is better)
           // This applies to all recipes, whether strict mode or not
-          if (b._hits !== a._hits) return b._hits - a._hits;
+              if (b._hits !== a._hits) return b._hits - a._hits;
           
           // Third priority: sort by fewest missing ingredients (lower is better)
-          if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
+              if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
           
           // Fourth priority: in strict mode, hide recipes with missing ingredients
           if (state.strict) {
@@ -1676,13 +1715,27 @@
         for (const r of list) {
           const haveSet = new Set(state.have.map(normalize));
           
-          // Create ingredient chips with availability indicators
+          // Create ingredient chips with availability indicators and shopping links
           const ingChips = h(
             'div',
             { class: 'chip-row' },
-            ...r.ingredients.map(i => h('span', { 
-              class: `chip ${haveSet.has(normalize(i)) ? 'good' : 'missing'}` 
-            }, i))
+            ...r.ingredients.map(i => {
+              const isAvailable = haveSet.has(normalize(i));
+              const chip = h('span', { 
+                class: `chip ${isAvailable ? 'good' : 'missing'}`,
+                title: isAvailable ? 'You have this ingredient' : 'Click to shop for this ingredient'
+              }, i);
+              
+              // Add click handler for missing ingredients to open shopping links
+              if (!isAvailable) {
+                chip.addEventListener('click', () => {
+                  const missingIngredients = r.ingredients.filter(ing => !haveSet.has(normalize(ing)));
+                  showShoppingOptions(i, missingIngredients);
+                });
+              }
+              
+              return chip;
+            })
           );
 
           // Create ordered list of cooking steps
@@ -1781,6 +1834,16 @@
             stepsList
           );
 
+          // Add shopping button for missing ingredients
+          if (r._missing && r._missing.length > 0) {
+            const shopAllBtn = h('button', {
+              class: 'btn secondary',
+              style: 'margin-top: 12px; font-size: 12px; padding: 6px 12px;',
+              onclick: () => showShoppingOptions('all missing ingredients', r._missing)
+            }, '🛒 Shop Missing Ingredients');
+            card.appendChild(shopAllBtn);
+          }
+
           els.grid.appendChild(card);
         }
       }
@@ -1835,6 +1898,205 @@
         const list = filterRecipes(recipes);
         renderCards(list);
         updateURL();
+      }
+
+      // ============================================================================
+      // AFFILIATE LINKS & SHOPPING INTEGRATION
+      // ============================================================================
+      
+      // Affiliate link configuration (replace with your actual affiliate IDs)
+      const AFFILIATE_CONFIG = {
+        instacart: {
+          baseUrl: 'https://www.instacart.com/store/search',
+          affiliateId: 'YOUR_INSTACART_AFFILIATE_ID', // Replace with your actual ID
+          commission: '2-5%'
+        },
+        doordash: {
+          baseUrl: 'https://www.doordash.com/store',
+          affiliateId: 'YOUR_DOORDASH_AFFILIATE_ID', // Replace with your actual ID
+          commission: '1-3%'
+        },
+        amazon: {
+          baseUrl: 'https://www.amazon.com/s',
+          affiliateId: 'YOUR_AMAZON_AFFILIATE_ID', // Replace with your actual ID
+          commission: '1-10%'
+        }
+      };
+
+      function generateInstacartLink(ingredients) {
+        const searchQuery = ingredients.join(' ');
+        return `${AFFILIATE_CONFIG.instacart.baseUrl}?q=${encodeURIComponent(searchQuery)}&ref=${AFFILIATE_CONFIG.instacart.affiliateId}`;
+      }
+
+      function generateDoorDashLink(ingredients) {
+        const searchQuery = ingredients.join(' ');
+        return `${AFFILIATE_CONFIG.doordash.baseUrl}?search=${encodeURIComponent(searchQuery)}&ref=${AFFILIATE_CONFIG.doordash.affiliateId}`;
+      }
+
+      function generateAmazonLink(ingredients) {
+        const searchQuery = ingredients.join(' ');
+        return `${AFFILIATE_CONFIG.amazon.baseUrl}?k=${encodeURIComponent(searchQuery)}&tag=${AFFILIATE_CONFIG.amazon.affiliateId}`;
+      }
+
+      function showShoppingOptions(ingredient, allMissingIngredients) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+          background: var(--card);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 400px;
+          width: 90%;
+          box-shadow: var(--shadow-colored);
+        `;
+        
+        content.innerHTML = `
+          <h3 style="margin: 0 0 16px 0; color: var(--text);">Shop for "${ingredient}"</h3>
+          <p style="color: var(--muted); margin-bottom: 20px;">Choose where to buy this ingredient:</p>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="${generateInstacartLink([ingredient])}" target="_blank" rel="noopener noreferrer" 
+               style="display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #00a86b, #00d4aa); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              <span>🛒</span>
+              <div>
+                <div>Instacart</div>
+                <small>Grocery delivery • 2-5% commission</small>
+              </div>
+            </a>
+            <a href="${generateDoorDashLink([ingredient])}" target="_blank" rel="noopener noreferrer"
+               style="display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #ff3000, #ff6b35); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              <span>🚚</span>
+              <div>
+                <div>DoorDash</div>
+                <small>Food delivery • 1-3% commission</small>
+              </div>
+            </a>
+            <a href="${generateAmazonLink([ingredient])}" target="_blank" rel="noopener noreferrer"
+               style="display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #ff9900, #ffad33); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              <span>📦</span>
+              <div>
+                <div>Amazon</div>
+                <small>Online shopping • 1-10% commission</small>
+              </div>
+            </a>
+          </div>
+          <button onclick="this.closest('.shopping-modal').remove()" 
+                  style="margin-top: 20px; padding: 8px 16px; background: var(--danger); color: white; border: none; border-radius: 6px; cursor: pointer;">
+            Close
+          </button>
+        `;
+        
+        modal.className = 'shopping-modal';
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.remove();
+        });
+      }
+
+      // ============================================================================
+      // AI RECIPE GENERATION - OpenAI ChatGPT Integration
+      // ============================================================================
+      
+      async function generateRecipeWithAI(ingredients) {
+        const apiKey = prompt('Enter your OpenAI API Key:');
+        if (!apiKey) {
+          throw new Error('API key is required');
+        }
+
+        const prompt = `Create a detailed recipe using these ingredients: ${ingredients}
+
+Please respond with a JSON object in this exact format:
+{
+  "title": "Recipe Name",
+  "category": "breakfast|lunch|dinner|desserts",
+  "method": "microwave|air-fryer|oven|no-cook",
+  "ingredients": ["ingredient1", "ingredient2", "ingredient3"],
+  "steps": ["Step 1", "Step 2", "Step 3"],
+  "difficulty": "Very Easy|Easy|Medium|Hard",
+  "time": "X min",
+  "nutrition": "{\\"calories\\": 200, \\"protein\\": 15, \\"carbs\\": 20, \\"fat\\": 8, \\"fiber\\": 2, \\"sugar\\": 5, \\"sodium\\": 300, \\"servings\\": 1}"
+}
+
+Make sure to:
+- Use only the provided ingredients plus common pantry staples (salt, pepper, oil, etc.)
+- Choose appropriate cooking method based on ingredients
+- Keep steps simple and clear
+- Estimate realistic nutrition values
+- Return ONLY the JSON, no other text`;
+
+        console.log('Sending request to OpenAI...');
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4',
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            max_tokens: 1000,
+            temperature: 0.7
+          })
+        });
+
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data);
+        
+        const recipeText = data.choices[0].message.content.trim();
+        console.log('Recipe text:', recipeText);
+        
+        try {
+          const recipe = JSON.parse(recipeText);
+          console.log('Parsed recipe:', recipe);
+          return recipe;
+        } catch (parseError) {
+          console.error('Parse error:', parseError);
+          console.error('Raw text:', recipeText);
+          throw new Error('Failed to parse AI response as JSON');
+        }
+      }
+
+      function addGeneratedRecipe(recipe) {
+        console.log('Adding recipe:', recipe);
+        
+        // Add generated recipe to the recipes array
+        recipes.push(recipe);
+        
+        // Save only generated recipes to localStorage (not the entire recipes array)
+        const generatedRecipes = recipes.filter(r => r._generated);
+        localStorage.setItem('generatedRecipes', JSON.stringify(generatedRecipes));
+        
+        // Refresh the display
+        applyFilters();
       }
 
       // ============================================================================
@@ -1895,6 +2157,60 @@
           if (text && /[,\n]/.test(text)) {
             e.preventDefault();
             addFromText(text);
+          }
+        });
+
+        // AI Recipe Generation
+        els.generate.addEventListener('click', async () => {
+          const availableIngredients = state.have.join(', ');
+          
+          if (state.have.length === 0) {
+            alert('Please add some ingredients first!');
+            return;
+          }
+
+          // Show loading state
+          const originalText = els.generate.textContent;
+          els.generate.textContent = '🤖 Generating...';
+          els.generate.disabled = true;
+
+          try {
+            // For testing, create a sample recipe first
+            const testRecipe = {
+              title: `Custom ${availableIngredients.split(',')[0]} Recipe`,
+              category: "dinner",
+              method: "microwave",
+              ingredients: state.have,
+              steps: [
+                `Prepare your ${availableIngredients.split(',')[0]}`,
+                "Add seasoning to taste",
+                "Cook until done",
+                "Serve hot"
+              ],
+              difficulty: "Easy",
+              time: "10 min",
+              nutrition: '{"calories": 200, "protein": 15, "carbs": 20, "fat": 8, "fiber": 2, "sugar": 5, "sodium": 300, "servings": 1}',
+              _generated: true
+            };
+            
+            addGeneratedRecipe(testRecipe);
+            alert(`✅ Test recipe generated!\n\n"${testRecipe.title}" has been added to your recipe collection.\n\nTo use real AI, uncomment the OpenAI code below.`);
+            
+            // Uncomment this section to use real AI:
+            /*
+            const recipe = await generateRecipeWithAI(availableIngredients);
+            recipe._generated = true;
+            addGeneratedRecipe(recipe);
+            alert(`✅ Recipe generated successfully!\n\n"${recipe.title}" has been added to your recipe collection.`);
+            */
+            
+          } catch (error) {
+            console.error('AI Recipe Generation Error:', error);
+            alert(`❌ Failed to generate recipe: ${error.message}\n\nPlease check your API key and try again.`);
+          } finally {
+            // Restore button state
+            els.generate.textContent = originalText;
+            els.generate.disabled = false;
           }
         });
 
