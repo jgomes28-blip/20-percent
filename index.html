@@ -1925,17 +1925,20 @@
 
       function generateInstacartLink(ingredients) {
         const searchQuery = ingredients.join(' ');
-        return `${AFFILIATE_CONFIG.instacart.baseUrl}?q=${encodeURIComponent(searchQuery)}&ref=${AFFILIATE_CONFIG.instacart.affiliateId}`;
+        // Working Instacart search link (no affiliate ID needed for basic functionality)
+        return `https://www.instacart.com/store/search?q=${encodeURIComponent(searchQuery)}`;
       }
 
       function generateDoorDashLink(ingredients) {
         const searchQuery = ingredients.join(' ');
-        return `${AFFILIATE_CONFIG.doordash.baseUrl}?search=${encodeURIComponent(searchQuery)}&ref=${AFFILIATE_CONFIG.doordash.affiliateId}`;
+        // Working DoorDash search link
+        return `https://www.doordash.com/store?search=${encodeURIComponent(searchQuery)}`;
       }
 
       function generateAmazonLink(ingredients) {
         const searchQuery = ingredients.join(' ');
-        return `${AFFILIATE_CONFIG.amazon.baseUrl}?k=${encodeURIComponent(searchQuery)}&tag=${AFFILIATE_CONFIG.amazon.affiliateId}`;
+        // Working Amazon search link (you can add your affiliate tag later)
+        return `https://www.amazon.com/s?k=${encodeURIComponent(searchQuery)}`;
       }
 
       function showShoppingOptions(ingredient, allMissingIngredients) {
@@ -1972,7 +1975,7 @@
               <span>🛒</span>
               <div>
                 <div>Instacart</div>
-                <small>Grocery delivery • 2-5% commission</small>
+                <small>Grocery delivery • Same-day delivery</small>
               </div>
             </a>
             <a href="${generateDoorDashLink([ingredient])}" target="_blank" rel="noopener noreferrer"
@@ -1980,7 +1983,7 @@
               <span>🚚</span>
               <div>
                 <div>DoorDash</div>
-                <small>Food delivery • 1-3% commission</small>
+                <small>Food delivery • Quick delivery</small>
               </div>
             </a>
             <a href="${generateAmazonLink([ingredient])}" target="_blank" rel="noopener noreferrer"
@@ -1988,7 +1991,15 @@
               <span>📦</span>
               <div>
                 <div>Amazon</div>
-                <small>Online shopping • 1-10% commission</small>
+                <small>Online shopping • Prime delivery</small>
+              </div>
+            </a>
+            <a href="https://www.walmart.com/search?q=${encodeURIComponent(ingredient)}" target="_blank" rel="noopener noreferrer"
+               style="display: flex; align-items: center; gap: 12px; padding: 12px; background: linear-gradient(135deg, #004c91, #0071dc); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+              <span>🏪</span>
+              <div>
+                <div>Walmart</div>
+                <small>Grocery pickup • Low prices</small>
               </div>
             </a>
           </div>
