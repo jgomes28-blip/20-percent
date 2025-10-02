@@ -1584,22 +1584,23 @@
           return { ...r, _hits: hits, _missing: missing, _canMake: canMake, _partialMatch: partialMatch };
         });
         
-        // Sort results: makeable recipes first, then partial matches, then everything else
+        // Sort results: prioritize by number of matching ingredients
         return list.sort((a, b) => {
           // First priority: recipes you can fully make
           if (a._canMake && !b._canMake) return -1;
           if (!a._canMake && b._canMake) return 1;
           
-          // Second priority: partial matches (if not in strict mode)
-          if (!state.strict) {
-            if (a._partialMatch && !b._partialMatch) return -1;
-            if (!a._partialMatch && b._partialMatch) return 1;
-            
-            // Within partial matches, sort by match count
-            if (a._partialMatch && b._partialMatch) {
-              if (b._hits !== a._hits) return b._hits - a._hits;
-              if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
-            }
+          // Second priority: sort by number of matching ingredients (higher is better)
+          // This applies to all recipes, whether strict mode or not
+          if (b._hits !== a._hits) return b._hits - a._hits;
+          
+          // Third priority: sort by fewest missing ingredients (lower is better)
+          if (a._missing.length !== b._missing.length) return a._missing.length - b._missing.length;
+          
+          // Fourth priority: in strict mode, hide recipes with missing ingredients
+          if (state.strict) {
+            if (a._missing.length > 0 && b._missing.length === 0) return 1;
+            if (a._missing.length === 0 && b._missing.length > 0) return -1;
           }
           
           // Final sort: alphabetical by title
