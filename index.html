@@ -1069,6 +1069,9 @@
           <button id="share" class="btn secondary" type="button">
             📤 Share Recipe List
           </button>
+          <button id="clearApiKey" class="btn secondary" type="button" title="Clear saved OpenAI API key">
+            🔑 Clear API Key
+          </button>
         </div>
       </div>
 
@@ -1377,6 +1380,7 @@
         generate: document.getElementById('generate'),   // AI generate button
         clear: document.getElementById('clear'),         // Clear all button
         share: document.getElementById('share'),         // Share link button
+        clearApiKey: document.getElementById('clearApiKey'), // Clear API key button
         chipInput: document.getElementById('chipInput'), // Ingredient chips container
         chipText: document.getElementById('chipText'),   // Text input for new ingredients
         strict: document.getElementById('strict'),       // Strict mode toggle
@@ -2023,10 +2027,20 @@
       // AI RECIPE GENERATION - OpenAI ChatGPT Integration
       // ============================================================================
       
+      // Store API key in localStorage for convenience
+      let cachedApiKey = localStorage.getItem('openai_api_key');
+
       async function generateRecipeWithAI(ingredients) {
-        const apiKey = prompt('Enter your OpenAI API Key:');
+        let apiKey = cachedApiKey;
+        
         if (!apiKey) {
-          throw new Error('API key is required');
+          apiKey = prompt('Enter your OpenAI API Key:\n\nGet one free at: https://platform.openai.com/api-keys\n\nYour key will be saved locally for convenience.');
+          if (!apiKey) {
+            throw new Error('API key is required to generate recipes');
+          }
+          // Save API key for future use
+          localStorage.setItem('openai_api_key', apiKey);
+          cachedApiKey = apiKey;
         }
 
         const prompt = `Create a detailed recipe using these ingredients: ${ingredients}
@@ -2186,34 +2200,11 @@ Make sure to:
           els.generate.disabled = true;
 
           try {
-            // For testing, create a sample recipe first
-            const testRecipe = {
-              title: `Custom ${availableIngredients.split(',')[0]} Recipe`,
-              category: "dinner",
-              method: "microwave",
-              ingredients: state.have,
-              steps: [
-                `Prepare your ${availableIngredients.split(',')[0]}`,
-                "Add seasoning to taste",
-                "Cook until done",
-                "Serve hot"
-              ],
-              difficulty: "Easy",
-              time: "10 min",
-              nutrition: '{"calories": 200, "protein": 15, "carbs": 20, "fat": 8, "fiber": 2, "sugar": 5, "sodium": 300, "servings": 1}',
-              _generated: true
-            };
-            
-            addGeneratedRecipe(testRecipe);
-            alert(`✅ Test recipe generated!\n\n"${testRecipe.title}" has been added to your recipe collection.\n\nTo use real AI, uncomment the OpenAI code below.`);
-            
-            // Uncomment this section to use real AI:
-            /*
+            // Use real OpenAI API
             const recipe = await generateRecipeWithAI(availableIngredients);
             recipe._generated = true;
             addGeneratedRecipe(recipe);
             alert(`✅ Recipe generated successfully!\n\n"${recipe.title}" has been added to your recipe collection.`);
-            */
             
           } catch (error) {
             console.error('AI Recipe Generation Error:', error);
@@ -2245,6 +2236,15 @@ Make sure to:
             setTimeout(() => (els.share.textContent = original), 1200);
           } catch (e) {
             alert('Link: ' + url);
+          }
+        });
+
+        // Clear saved API key
+        els.clearApiKey.addEventListener('click', () => {
+          if (confirm('Are you sure you want to clear your saved OpenAI API key?')) {
+            localStorage.removeItem('openai_api_key');
+            cachedApiKey = null;
+            alert('API key cleared! You will need to enter it again for recipe generation.');
           }
         });
       }
