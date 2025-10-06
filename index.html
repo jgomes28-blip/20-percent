@@ -37,6 +37,8 @@
         --danger: #ef4444;       /* Red danger */
         --purple: #8b5cf6;       /* Purple accent */
         --pink: #ec4899;         /* Pink accent */
+        --premium: #ffd700;      /* Gold for premium features */
+        --premium-dark: #b8860b; /* Dark gold */
         --chip: linear-gradient(145deg, #374151, #1f2937);
         --card: linear-gradient(145deg, #1f2937, #111827);
         --border: #4b5563;       /* Lighter border */
@@ -370,6 +372,185 @@
       }
       .shop-btn.amazon {
         background: linear-gradient(135deg, #ff9900, #ffad33);
+      }
+
+      /* USER ACCOUNT SYSTEM */
+      .user-section {
+        margin-top: 20px;
+        padding: 16px;
+        background: var(--card);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+      }
+      .user-login {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .user-login input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        color: var(--text);
+        min-width: 150px;
+      }
+      .user-profile {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      /* RECIPE RATING SYSTEM */
+      .rating-stars {
+        display: flex;
+        gap: 2px;
+        margin: 8px 0;
+      }
+      .star {
+        font-size: 16px;
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+      .star.filled { color: #ffd700; }
+      .star.empty { color: var(--muted); }
+      .rating-count {
+        font-size: 12px;
+        color: var(--muted);
+        margin-left: 8px;
+      }
+
+      /* DIETARY FILTERS */
+      .dietary-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .dietary-chip {
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--chip);
+        color: var(--text);
+      }
+      .dietary-chip:hover {
+        background: var(--brand);
+        color: white;
+      }
+      .dietary-chip.active {
+        background: var(--brand);
+        color: white;
+        border-color: var(--brand);
+      }
+
+      /* MEAL PLANNING */
+      .meal-planner {
+        background: var(--card);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid var(--border);
+      }
+      .meal-plan-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .meal-day {
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        border: 1px solid var(--border);
+        min-height: 120px;
+      }
+      .meal-day h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: var(--text);
+        text-align: center;
+      }
+      .meal-slot {
+        background: var(--chip);
+        border-radius: 6px;
+        padding: 6px;
+        margin: 4px 0;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .meal-slot:hover {
+        background: var(--brand);
+        color: white;
+      }
+
+      /* RECIPE COLLECTIONS */
+      .recipe-collections {
+        margin-top: 20px;
+      }
+      .collection-item {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px;
+        margin: 8px 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .collection-item:hover {
+        background: var(--panel);
+        border-color: var(--brand);
+      }
+
+      /* NUTRITION TRACKING */
+      .nutrition-tracker {
+        background: var(--card);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid var(--border);
+      }
+      .macro-goals {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin: 16px 0;
+      }
+      .macro-goal {
+        text-align: center;
+        padding: 12px;
+        background: var(--panel);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+      }
+      .macro-goal .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      .macro-goal .value {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--text);
+      }
+      .macro-goal .progress {
+        width: 100%;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+      .macro-goal .progress-bar {
+        height: 100%;
+        background: var(--brand);
+        transition: width 0.3s ease;
       }
 
       /* TOGGLE SWITCH - Enhanced custom styled checkbox */
@@ -1018,6 +1199,20 @@
         <div class="hero">
           <h1>Smart Meal Planner</h1>
           <p>Browse all recipes by category and cooking method. Add your ingredients to see which ones you can make right now!</p>
+          
+          <!-- User Account Section -->
+          <div class="user-section">
+            <div id="userLogin" class="user-login" style="display: none;">
+              <input type="text" id="username" placeholder="Enter username" />
+              <button id="loginBtn" class="btn">Login</button>
+              <button id="signupBtn" class="btn secondary">Sign Up</button>
+            </div>
+            <div id="userProfile" class="user-profile" style="display: none;">
+              <span id="welcomeText">Welcome, <strong id="usernameDisplay"></strong>!</span>
+              <button id="logoutBtn" class="btn secondary">Logout</button>
+            </div>
+            <button id="showLogin" class="btn secondary">👤 Login</button>
+          </div>
         </div>
         
         <!-- MEAL CATEGORY NAVIGATION -->
@@ -1073,11 +1268,132 @@
             🔑 Clear API Key
           </button>
         </div>
+
+        <!-- Dietary Filters -->
+        <div class="dietary-filters">
+          <div class="dietary-chip active" data-diet="all">All Diets</div>
+          <div class="dietary-chip" data-diet="vegan">🌱 Vegan</div>
+          <div class="dietary-chip" data-diet="vegetarian">🥬 Vegetarian</div>
+          <div class="dietary-chip" data-diet="keto">🥓 Keto</div>
+          <div class="dietary-chip" data-diet="gluten-free">🌾 Gluten-Free</div>
+          <div class="dietary-chip" data-diet="paleo">🥩 Paleo</div>
+          <div class="dietary-chip" data-diet="low-carb">📉 Low-Carb</div>
+          <div class="dietary-chip" data-diet="high-protein">💪 High-Protein</div>
+        </div>
       </div>
 
       <div class="meta" id="meta" style="display:none;">
         <span id="count">0</span>
         <span id="countLabel">recipes found</span>
+      </div>
+
+      <!-- Meal Planning Section -->
+      <div class="meal-planner" id="mealPlanner" style="display: none;">
+        <h3>📅 Weekly Meal Planner</h3>
+        <div class="meal-plan-grid">
+          <div class="meal-day">
+            <h4>Monday</h4>
+            <div class="meal-slot" data-day="monday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="monday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="monday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Tuesday</h4>
+            <div class="meal-slot" data-day="tuesday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="tuesday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="tuesday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Wednesday</h4>
+            <div class="meal-slot" data-day="wednesday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="wednesday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="wednesday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Thursday</h4>
+            <div class="meal-slot" data-day="thursday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="thursday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="thursday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Friday</h4>
+            <div class="meal-slot" data-day="friday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="friday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="friday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Saturday</h4>
+            <div class="meal-slot" data-day="saturday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="saturday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="saturday" data-meal="dinner">Dinner</div>
+          </div>
+          <div class="meal-day">
+            <h4>Sunday</h4>
+            <div class="meal-slot" data-day="sunday" data-meal="breakfast">Breakfast</div>
+            <div class="meal-slot" data-day="sunday" data-meal="lunch">Lunch</div>
+            <div class="meal-slot" data-day="sunday" data-meal="dinner">Dinner</div>
+          </div>
+        </div>
+        <button id="generateShoppingList" class="btn" style="margin-top: 16px;">
+          🛒 Generate Shopping List
+        </button>
+      </div>
+
+      <!-- Nutrition Tracking Section -->
+      <div class="nutrition-tracker" id="nutritionTracker" style="display: none;">
+        <h3>📊 Daily Nutrition Tracking</h3>
+        <div class="macro-goals">
+          <div class="macro-goal">
+            <div class="label">Calories</div>
+            <div class="value" id="caloriesProgress">0 / 2000</div>
+            <div class="progress">
+              <div class="progress-bar" id="caloriesBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="macro-goal">
+            <div class="label">Protein</div>
+            <div class="value" id="proteinProgress">0 / 150g</div>
+            <div class="progress">
+              <div class="progress-bar" id="proteinBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="macro-goal">
+            <div class="label">Carbs</div>
+            <div class="value" id="carbsProgress">0 / 250g</div>
+            <div class="progress">
+              <div class="progress-bar" id="carbsBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="macro-goal">
+            <div class="label">Fat</div>
+            <div class="value" id="fatProgress">0 / 80g</div>
+            <div class="progress">
+              <div class="progress-bar" id="fatBar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <button id="logMeal" class="btn secondary" style="margin-top: 16px;">
+          ➕ Log Meal
+        </button>
+      </div>
+
+      <!-- Recipe Collections Section -->
+      <div class="recipe-collections" id="recipeCollections" style="display: none;">
+        <h3>📚 My Recipe Collections</h3>
+        <div id="collectionsList">
+          <div class="collection-item" data-collection="favorites">
+            ⭐ Favorites (0 recipes)
+          </div>
+          <div class="collection-item" data-collection="meal-prep">
+            🍱 Meal Prep (0 recipes)
+          </div>
+          <div class="collection-item" data-collection="quick-meals">
+            ⚡ Quick Meals (0 recipes)
+          </div>
+        </div>
+        <button id="createCollection" class="btn secondary" style="margin-top: 16px;">
+          ➕ Create New Collection
+        </button>
       </div>
 
       <div id="grid" class="grid"></div>
@@ -1366,7 +1682,35 @@
         strict: params.get('strict') !== '0',  // Strict mode: only show recipes user can fully make
         category: params.get('category') || 'all',  // Selected meal category
         method: params.get('method') || 'all',  // Selected cooking method
-        generatedRecipes: loadGeneratedRecipes()  // AI-generated recipes stored locally
+        dietaryFilter: params.get('diet') || 'all',  // Dietary restriction filter
+        generatedRecipes: loadGeneratedRecipes(),  // AI-generated recipes stored locally
+        // User account system
+        currentUser: localStorage.getItem('currentUser'),
+        isLoggedIn: !!localStorage.getItem('currentUser'),
+        // Recipe ratings and reviews
+        ratings: JSON.parse(localStorage.getItem('recipeRatings') || '{}'),
+        reviews: JSON.parse(localStorage.getItem('recipeReviews') || '{}'),
+        // Meal planning
+        mealPlan: JSON.parse(localStorage.getItem('mealPlan') || '{}'),
+        // Nutrition tracking
+        dailyNutrition: JSON.parse(localStorage.getItem('dailyNutrition') || JSON.stringify({
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0
+        })),
+        nutritionGoals: JSON.parse(localStorage.getItem('nutritionGoals') || JSON.stringify({
+          calories: 2000,
+          protein: 150,
+          carbs: 250,
+          fat: 80
+        })),
+        // Recipe collections
+        collections: JSON.parse(localStorage.getItem('recipeCollections') || JSON.stringify({
+          favorites: [],
+          'meal-prep': [],
+          'quick-meals': []
+        }))
       };
 
       // ============================================================================
@@ -1385,7 +1729,27 @@
         chipText: document.getElementById('chipText'),   // Text input for new ingredients
         strict: document.getElementById('strict'),       // Strict mode toggle
         categoryBtns: document.querySelectorAll('.category-btn'), // Category filter buttons
-        methodChips: document.querySelectorAll('.method-chip')     // Cooking method filter chips
+        methodChips: document.querySelectorAll('.method-chip'),     // Cooking method filter chips
+        // User account elements
+        userLogin: document.getElementById('userLogin'),
+        userProfile: document.getElementById('userProfile'),
+        showLogin: document.getElementById('showLogin'),
+        username: document.getElementById('username'),
+        loginBtn: document.getElementById('loginBtn'),
+        signupBtn: document.getElementById('signupBtn'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        usernameDisplay: document.getElementById('usernameDisplay'),
+        // Dietary filters
+        dietaryChips: document.querySelectorAll('.dietary-chip'),
+        // Meal planning
+        mealPlanner: document.getElementById('mealPlanner'),
+        generateShoppingList: document.getElementById('generateShoppingList'),
+        // Nutrition tracking
+        nutritionTracker: document.getElementById('nutritionTracker'),
+        logMeal: document.getElementById('logMeal'),
+        // Recipe collections
+        recipeCollections: document.getElementById('recipeCollections'),
+        createCollection: document.getElementById('createCollection')
       };
 
       // ============================================================================
