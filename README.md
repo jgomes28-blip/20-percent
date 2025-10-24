@@ -2,6 +2,10 @@
 
 A comprehensive meal planning application that helps users discover recipes across all meal types and cooking methods. Features include ingredient-based filtering, AI-powered recipe generation, nutrition tracking, and customizable color themes.
 
+## 🌐 Live Demo
+
+**[Try Smart Meal Planner Online](https://your-site-url.com)** - Experience the full application with all features including AI recipe generation, meal planning, and nutrition tracking.
+
 ## ✨ Features
 
 ### 🍳 **Recipe Management**
@@ -10,6 +14,8 @@ A comprehensive meal planning application that helps users discover recipes acro
 - **Ingredient-based Filtering** with visual chips
 - **Dietary Filters**: Vegan, Vegetarian, Keto, Gluten-Free, Paleo, Low-Carb, High-Protein
 - **Difficulty Levels** and cooking times for each recipe
+- **⭐ Community Rating System** with 5-star ratings and detailed reviews
+- **💡 Tips & Tricks Sharing** where users can share cooking modifications and discoveries
 
 ### 🤖 **AI-Powered Features**
 - **Custom Recipe Generation** using OpenAI API
@@ -67,6 +73,8 @@ A comprehensive meal planning application that helps users discover recipes acro
 2. **Select Filters**: Choose meal type, cooking method, and dietary preferences
 3. **Browse Results**: View filtered recipes with nutrition information
 4. **Generate Custom**: Use AI to create recipes from your ingredients
+5. **Rate & Review**: Share your experience with 5-star ratings and detailed reviews
+6. **Share Tips**: Help the community by sharing cooking modifications and tricks
 
 ### Meal Planning
 1. **Open Meal Planner**: Use the hamburger menu to access tools
